@@ -188,7 +188,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 			CircleObjectTrack(THRESHOLD_HSV_HMIN, THRESHOLD_HSV_SMIN,
 					THRESHOLD_HSV_VMIN, THRESHOLD_HSV_HMAX, THRESHOLD_HSV_SMAX,
 					THRESHOLD_HSV_VMAX, mRgba.width(), mRgba.height(),
-					mGray.getNativeObjAddr(), mRgba.getNativeObjAddr(), true);
+					mGray.getNativeObjAddr(), mRgba.getNativeObjAddr(), false);
 
 			break;
 		}
