@@ -3,6 +3,16 @@ package nl.tudelft.followbot;
 import nl.tudelft.followbot.data.DataStack;
 import nl.tudelft.followbot.sensors.Accelerometer;
 import nl.tudelft.followbot.sensors.SensorSink;
+
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+
 import android.app.Activity;
 import android.content.Context;
 import android.hardware.SensorEvent;
@@ -10,8 +20,32 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
+import android.view.WindowManager;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements CvCameraViewListener2 {
+
+	private static final int VIEW_MODE_RGBA = 0;
+	private static final int VIEW_MODE_THRESH = 2;
+	private static final int VIEW_MODE_OD_RGBA = 5;
+
+	private static final int THRESHOLD_HSV_HMIN = 120;
+	private static final int THRESHOLD_HSV_SMIN = 50;
+	private static final int THRESHOLD_HSV_VMIN = 50;
+
+	private static final int THRESHOLD_HSV_HMAX = 200;
+	private static final int THRESHOLD_HSV_SMAX = 255;
+	private static final int THRESHOLD_HSV_VMAX = 255;
+
+	private int mViewMode;
+	private Mat mRgba;
+	private Mat mGray;
+
+	private MenuItem mItemPreviewRGBA;
+	private MenuItem mItemPreviewThresh;
+	private MenuItem mItemPreviewOdRGBA;
+
+	private CameraBridgeViewBase mOpenCvCameraView;
 
 	private Accelerometer accel;
 
@@ -19,9 +53,33 @@ public class MainActivity extends Activity {
 
 	private final DataStack<float[]> accelStack = new DataStack<float[]>(512);
 
+	private final BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(
+			this) {
+		@Override
+		public void onManagerConnected(int status) {
+			switch (status) {
+			case LoaderCallbackInterface.SUCCESS: {
+				// Log.i(TAG, "OpenCV loaded successfully");
+
+				// Load native library after(!) OpenCV initialization
+				System.loadLibrary("object_tracking");
+
+				mOpenCvCameraView.enableView();
+			}
+				break;
+			default: {
+				super.onManagerConnected(status);
+			}
+				break;
+			}
+		}
+	};
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
 		setContentView(R.layout.activity_main);
 
 		accel = new Accelerometer(
@@ -41,25 +99,119 @@ public class MainActivity extends Activity {
 				accelStack.push(event.values);
 			}
 		});
-	}
 
-	@Override
-	protected void onResume() {
-		super.onResume();
-		accel.resume();
+		// open new camera view
+		mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view);
+		mOpenCvCameraView.setMaxFrameSize(352, 288);
+		mOpenCvCameraView.setCvCameraViewListener(this);
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		accel.pause();
+
+		if (mOpenCvCameraView != null)
+			mOpenCvCameraView.disableView();
+
+		if (accel != null)
+			accel.pause();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this,
+				mLoaderCallback);
+
+		if (accel != null)
+			accel.resume();
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+
+		if (mOpenCvCameraView != null)
+			mOpenCvCameraView.disableView();
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
+
+		mItemPreviewRGBA = menu.add("Preview RGBA");
+		mItemPreviewThresh = menu.add("Object Detection Threshold");
+		mItemPreviewOdRGBA = menu.add("Object Detection RGBA");
+
 		return true;
 	}
 
+	@Override
+	public void onCameraViewStarted(int width, int height) {
+		mRgba = new Mat(height, width, CvType.CV_8UC4);
+		mGray = new Mat(height, width, CvType.CV_8UC1);
+	}
+
+	@Override
+	public void onCameraViewStopped() {
+		mRgba.release();
+		mGray.release();
+	}
+
+	@Override
+	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+		final int viewMode = mViewMode;
+
+		switch (viewMode) {
+		case VIEW_MODE_RGBA:
+			// input frame has RBGA format
+			mRgba = inputFrame.rgba();
+			break;
+		case VIEW_MODE_THRESH:
+			// input frame has RGBA format
+			mRgba = inputFrame.rgba();
+			mGray = inputFrame.gray();
+
+			CircleObjectTrack(THRESHOLD_HSV_HMIN, THRESHOLD_HSV_SMIN,
+					THRESHOLD_HSV_VMIN, THRESHOLD_HSV_HMAX, THRESHOLD_HSV_SMAX,
+					THRESHOLD_HSV_VMAX, mRgba.width(), mRgba.height(),
+					mGray.getNativeObjAddr(), mRgba.getNativeObjAddr(), true);
+
+			break;
+		case VIEW_MODE_OD_RGBA:
+			// input frame has RGBA format
+			mRgba = inputFrame.rgba();
+			mGray = inputFrame.gray();
+
+			CircleObjectTrack(THRESHOLD_HSV_HMIN, THRESHOLD_HSV_SMIN,
+					THRESHOLD_HSV_VMIN, THRESHOLD_HSV_HMAX, THRESHOLD_HSV_SMAX,
+					THRESHOLD_HSV_VMAX, mRgba.width(), mRgba.height(),
+					mGray.getNativeObjAddr(), mRgba.getNativeObjAddr(), true);
+
+			break;
+		}
+
+		return mRgba;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		Log.i(TAG, "called onOptionsItemSelected; selected item: " + item);
+
+		if (item == mItemPreviewRGBA) {
+			mViewMode = VIEW_MODE_RGBA;
+		} else if (item == mItemPreviewThresh) {
+			mViewMode = VIEW_MODE_THRESH;
+		} else if (item == mItemPreviewOdRGBA) {
+			mViewMode = VIEW_MODE_OD_RGBA;
+		}
+
+		return true;
+	}
+
+	public native void CircleObjectTrack(int hmin, int smin, int vmin,
+			int hmax, int smax, int vmax, int width, int height,
+			long matAddrGr, long matAddrRgba, boolean debug);
 }
