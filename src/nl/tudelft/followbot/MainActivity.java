@@ -113,8 +113,9 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		if (mOpenCvCameraView != null)
 			mOpenCvCameraView.disableView();
 
-		if (accel != null)
+		if (accel != null) {
 			accel.pause();
+		}
 	}
 
 	@Override
@@ -124,16 +125,18 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this,
 				mLoaderCallback);
 
-		if (accel != null)
+		if (accel != null) {
 			accel.resume();
+		}
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
 
-		if (mOpenCvCameraView != null)
+		if (mOpenCvCameraView != null) {
 			mOpenCvCameraView.disableView();
+		}
 	}
 
 	@Override

@@ -6,7 +6,7 @@ OPENCV_LIB_TYPE        := STATIC
 OPENCV_INSTALL_MODULES := on
 OPENCV_CAMERA_MODULES  := off
 
-include ../../opencv/sdk/native/jni/OpenCV.mk
+include ../opencv/sdk/native/jni/OpenCV.mk
 
 LOCAL_MODULE    := object_tracking
 LOCAL_SRC_FILES := obj_tracking.cpp
