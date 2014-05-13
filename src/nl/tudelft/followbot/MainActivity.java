@@ -1,6 +1,12 @@
 package nl.tudelft.followbot;
 
+import java.util.Observable;
+import java.util.Observer;
+
+import nl.tudelft.followbot.calibration.AccelerometerCalibration;
 import nl.tudelft.followbot.data.DataStack;
+import nl.tudelft.followbot.knn.FeatureVector;
+import nl.tudelft.followbot.knn.KNNClass;
 import nl.tudelft.followbot.sensors.Accelerometer;
 import nl.tudelft.followbot.sensors.SensorSink;
 
@@ -21,7 +27,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 
 public class MainActivity extends Activity implements CvCameraViewListener2 {
 
@@ -48,6 +56,11 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 	private CameraBridgeViewBase mOpenCvCameraView;
 
 	private Accelerometer accel;
+
+	private FeatureVector standFeature;
+	private FeatureVector walkFeature;
+	private final KNNClass standClass = new KNNClass("stand");
+	private final KNNClass walkClass = new KNNClass("walk");
 
 	private final String TAG = "FollowBot";
 
@@ -104,6 +117,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view);
 		mOpenCvCameraView.setMaxFrameSize(352, 288);
 		mOpenCvCameraView.setCvCameraViewListener(this);
+
 	}
 
 	@Override
@@ -212,6 +226,40 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		}
 
 		return true;
+	}
+
+	public void onClickCalStand(View view) {
+		Button btn = (Button) view;
+		final AccelerometerCalibration cal = new AccelerometerCalibration(
+				accel, 10, btn);
+
+		cal.addObserver(new Observer() {
+			@Override
+			public void update(Observable observable, Object data) {
+				cal.getData();
+				standFeature = new FeatureVector(standClass,
+						new float[] { 0, 0 });
+			}
+		});
+
+		cal.start();
+	}
+
+	public void onClickCalWalk(View view) {
+		Button btn = (Button) view;
+		final AccelerometerCalibration cal = new AccelerometerCalibration(
+				accel, 10, btn);
+
+		cal.addObserver(new Observer() {
+			@Override
+			public void update(Observable observable, Object data) {
+				cal.getData();
+				standFeature = new FeatureVector(walkClass,
+						new float[] { 0, 0 });
+			}
+		});
+
+		cal.start();
 	}
 
 	public native void CircleObjectTrack(int hmin, int smin, int vmin,
