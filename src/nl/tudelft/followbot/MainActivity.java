@@ -5,6 +5,7 @@ import java.util.Observer;
 
 import nl.tudelft.followbot.calibration.AccelerometerCalibration;
 import nl.tudelft.followbot.data.DataStack;
+import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNNClass;
 import nl.tudelft.followbot.sensors.Accelerometer;
@@ -236,9 +237,9 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		cal.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				cal.getData();
-				standFeature = new FeatureVector(standClass,
-						new float[] { 0, 0 });
+				FeatureExtractor f = FeatureExtractor.fromFloat3(cal.getData());
+				standFeature = new FeatureVector(walkClass, new float[] {
+						f.zeroCrossings(), f.avgPower() });
 			}
 		});
 
@@ -253,9 +254,9 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		cal.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				cal.getData();
-				standFeature = new FeatureVector(walkClass,
-						new float[] { 0, 0 });
+				FeatureExtractor f = FeatureExtractor.fromFloat3(cal.getData());
+				standFeature = new FeatureVector(walkClass, new float[] {
+						f.zeroCrossings(), f.avgPower() });
 			}
 		});
 
