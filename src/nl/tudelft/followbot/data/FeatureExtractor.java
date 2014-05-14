@@ -1,5 +1,7 @@
 package nl.tudelft.followbot.data;
 
+import android.util.Log;
+
 public class FeatureExtractor {
 
 	private final DataStack<Float> data;
@@ -10,8 +12,12 @@ public class FeatureExtractor {
 
 		for (int i = 0; i < data.getSize(); i++) {
 			float[] x = data.get(i);
+			Log.d("foo", i + ": " + x[0] + "");
 			if (x.length >= 3) {
-				d.push(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
+				d.push((x[0] * x[0] + x[1] * x[1] + x[2] * x[2])
+				// Multiply with the sign of the vertical axis, so it
+				// can count the zero crossings
+						* Math.signum(x[1]));
 			}
 		}
 

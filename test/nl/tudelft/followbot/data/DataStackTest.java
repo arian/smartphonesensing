@@ -53,6 +53,16 @@ public class DataStackTest {
 	}
 
 	@Test
+	public void testPeek() {
+		DataStack<Integer> data = new DataStack<Integer>(5);
+		for (int i = 0; i < 10; i++) {
+			data.push(i);
+			int x = data.peek();
+			assertEquals(i, x, 1e-6);
+		}
+	}
+
+	@Test
 	public void testToArray() {
 		DataStack<Integer> data = new DataStack<Integer>(5);
 		data.push(4);

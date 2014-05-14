@@ -61,6 +61,15 @@ public class DataStack<T> {
 	}
 
 	/**
+	 * Return the last pushed item
+	 * 
+	 * @return T
+	 */
+	public T peek() {
+		return stack.get((pointer + size - 1) % size);
+	}
+
+	/**
 	 * 
 	 * @return array of all doubles, with the oldest value in index 0.
 	 */
