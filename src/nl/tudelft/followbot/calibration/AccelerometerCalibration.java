@@ -12,7 +12,7 @@ import android.widget.Button;
 
 public class AccelerometerCalibration extends Observable {
 
-	private final DataStack<float[]> data = new DataStack<float[]>(500);
+	private final DataStack<float[]> data = new DataStack<float[]>(1500);
 
 	Handler timerHandler = new Handler();
 
@@ -35,7 +35,8 @@ public class AccelerometerCalibration extends Observable {
 	SensorSink sensorListener = new SensorSink() {
 		@Override
 		public void push(SensorEvent event) {
-			data.push(event.values);
+			data.push(new float[] { event.timestamp, event.values[0],
+					event.values[1], event.values[2] });
 		}
 	};
 
@@ -76,6 +77,7 @@ public class AccelerometerCalibration extends Observable {
 		button.setText(buttonText);
 		sensor.removeListener(sensorListener);
 		Log.d("Calibration", data.getSize() + "");
+		setChanged();
 		notifyObservers();
 		running = true;
 	}

@@ -243,15 +243,28 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 
 	public void onClickCalStand(View view) {
 		Button btn = (Button) view;
+		final int calibrationTime = 4;
 		final AccelerometerCalibration cal = new AccelerometerCalibration(
-				accel, 10, btn);
+				accel, calibrationTime, btn);
 
 		cal.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				FeatureExtractor f = FeatureExtractor.fromFloat3(cal.getData());
-				standFeature = new FeatureVector(walkClass, new float[] {
-						f.zeroCrossings(), f.avgPower() });
+				DataStack<float[]> d = cal.getData();
+				float[] last = d.peek();
+				long lastTime = (long) last[0];
+				long timeSinceStart = (long) (lastTime - calibrationTime * 1e9);
+				FeatureExtractor f = FeatureExtractor.fromFloat4(d,
+						timeSinceStart);
+
+				// Scale zero crossings so it has more or less the same range
+				// as the power
+				float[] values = new float[] {
+						f.zeroCrossings() / calibrationTime * 500, f.avgPower() };
+
+				Log.d("Calibration", values[0] + " : " + values[1]);
+
+				standFeature = new FeatureVector(walkClass, values);
 			}
 		});
 
@@ -260,15 +273,21 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 
 	public void onClickCalWalk(View view) {
 		Button btn = (Button) view;
+		final int calibrationTime = 10;
 		final AccelerometerCalibration cal = new AccelerometerCalibration(
-				accel, 10, btn);
+				accel, calibrationTime, btn);
 
 		cal.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				FeatureExtractor f = FeatureExtractor.fromFloat3(cal.getData());
+				DataStack<float[]> d = cal.getData();
+				float[] last = d.peek();
+				long lastTime = (long) last[0];
+				long timeSinceStart = (long) (lastTime - calibrationTime * 1e9);
+				FeatureExtractor f = FeatureExtractor.fromFloat4(d,
+						timeSinceStart);
 				standFeature = new FeatureVector(walkClass, new float[] {
-						f.zeroCrossings(), f.avgPower() });
+						f.zeroCrossings() / calibrationTime, f.avgPower() });
 			}
 		});
 
