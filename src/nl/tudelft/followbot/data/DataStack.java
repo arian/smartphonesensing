@@ -12,6 +12,18 @@ import java.util.ArrayList;
  */
 public class DataStack<T> {
 
+	public interface Filter<T> {
+		public boolean filter(T t);
+	}
+
+	public interface Map<X, Y> {
+		public Y map(X t);
+	}
+
+	public interface Each<T> {
+		public void each(T t);
+	}
+
 	private int max = 0;
 	private int size = 0;
 	private int pointer = 0;
@@ -67,6 +79,50 @@ public class DataStack<T> {
 	 */
 	public T peek() {
 		return stack.get((pointer + size - 1) % size);
+	}
+
+	/**
+	 * Filters the datastack
+	 * 
+	 * @param pred
+	 *            filter method
+	 * @return filtered stack
+	 */
+	public DataStack<T> filter(Filter<T> pred) {
+		DataStack<T> d = new DataStack<T>(size);
+		for (int i = 0; i < size; i++) {
+			T x = get(i);
+			if (pred.filter(x)) {
+				d.push(x);
+			}
+		}
+		return d;
+	}
+
+	/**
+	 * Filters the datastack
+	 * 
+	 * @param <Y>
+	 * 
+	 * @param <L>
+	 * 
+	 * @param pred
+	 *            filter method
+	 * @return filtered stack
+	 */
+	public <Y> DataStack<Y> map(Map<T, Y> pred) {
+		DataStack<Y> d = new DataStack<Y>(size);
+		for (int i = 0; i < size; i++) {
+			d.push(pred.map(get(i)));
+		}
+		return d;
+	}
+
+	public DataStack<T> each(Each<T> pred) {
+		for (int i = 0; i < size; i++) {
+			pred.each(get(i));
+		}
+		return this;
 	}
 
 	/**
