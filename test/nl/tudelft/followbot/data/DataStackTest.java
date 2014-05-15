@@ -116,6 +116,21 @@ public class DataStackTest {
 	}
 
 	@Test
+	public void testReduce() {
+		DataStack<Integer> data = new DataStack<Integer>(4);
+		for (int i = 0; i < 3; i++) {
+			data.push(i);
+		}
+		Integer sum = data.reduce(new DataStack.Reduce<Integer, Integer>() {
+			@Override
+			public Integer reduce(Integer t, Integer sum) {
+				return sum += t;
+			}
+		}, 3);
+		assertEquals(6, sum, 1e-6);
+	}
+
+	@Test
 	public void testToArray() {
 		DataStack<Integer> data = new DataStack<Integer>(5);
 		data.push(4);

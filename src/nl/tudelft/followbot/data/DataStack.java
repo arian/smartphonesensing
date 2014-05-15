@@ -24,6 +24,10 @@ public class DataStack<T> {
 		public void each(T t);
 	}
 
+	public interface Reduce<X, Y> {
+		public Y reduce(X t, Y y);
+	}
+
 	private int max = 0;
 	private int size = 0;
 	private int pointer = 0;
@@ -118,11 +122,30 @@ public class DataStack<T> {
 		return d;
 	}
 
+	/**
+	 * Iterate over all items in the stack
+	 * 
+	 * @param pred
+	 * @return
+	 */
 	public DataStack<T> each(Each<T> pred) {
 		for (int i = 0; i < size; i++) {
 			pred.each(get(i));
 		}
 		return this;
+	}
+
+	/**
+	 * Iterate over all items in the stack
+	 * 
+	 * @param pred
+	 * @return
+	 */
+	public <Y> Y reduce(Reduce<T, Y> pred, Y start) {
+		for (int i = 0; i < size; i++) {
+			start = pred.reduce(get(i), start);
+		}
+		return start;
 	}
 
 	/**

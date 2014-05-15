@@ -5,7 +5,6 @@ import java.util.Observer;
 
 import nl.tudelft.followbot.calibration.AccelerometerCalibration;
 import nl.tudelft.followbot.data.DataStack;
-import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNNClass;
 import nl.tudelft.followbot.sensors.Accelerometer;
@@ -250,21 +249,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		cal.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				DataStack<float[]> d = cal.getData();
-				float[] last = d.peek();
-				long lastTime = (long) last[0];
-				long timeSinceStart = (long) (lastTime - calibrationTime * 1e9);
-				FeatureExtractor f = FeatureExtractor.fromFloat4(d,
-						timeSinceStart);
-
-				// Scale zero crossings so it has more or less the same range
-				// as the power
-				float[] values = new float[] {
-						f.zeroCrossings() / calibrationTime * 500, f.avgPower() };
-
-				Log.d("Calibration", values[0] + " : " + values[1]);
-
-				standFeature = new FeatureVector(walkClass, values);
+				standFeature = new FeatureVector(standClass, cal.getFeatures());
 			}
 		});
 
@@ -280,14 +265,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		cal.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				DataStack<float[]> d = cal.getData();
-				float[] last = d.peek();
-				long lastTime = (long) last[0];
-				long timeSinceStart = (long) (lastTime - calibrationTime * 1e9);
-				FeatureExtractor f = FeatureExtractor.fromFloat4(d,
-						timeSinceStart);
-				standFeature = new FeatureVector(walkClass, new float[] {
-						f.zeroCrossings() / calibrationTime, f.avgPower() });
+				walkFeature = new FeatureVector(walkClass, cal.getFeatures());
 			}
 		});
 
