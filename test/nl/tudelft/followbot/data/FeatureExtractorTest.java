@@ -10,12 +10,13 @@ public class FeatureExtractorTest {
 	@Test
 	public void testFromFloat3() {
 		DataStack<float[]> d = new DataStack<float[]>(10);
-		d.push(new float[] { 1, -2, 3 });
-		d.push(new float[] { 1, 2, 3 });
-		d.push(new float[] { 1, -2, 3 });
-		d.push(new float[] { 1, 2 });
-		d.push(new float[] { 1, 2 });
-		FeatureExtractor f = FeatureExtractor.fromFloat3(d);
+		d.push(new float[] { 0, 3, -2, 1 });
+		d.push(new float[] { 1, 1, -2, 3 });
+		d.push(new float[] { 2, 1, 2, 3 });
+		d.push(new float[] { 3, 1, -2, 3 });
+		d.push(new float[] { 4, 1, 2 });
+		d.push(new float[] { 5, 1, 2 });
+		FeatureExtractor f = FeatureExtractor.fromFloat4(d, 1);
 		DataStack<Float> x = f.getData();
 		assertEquals(-14, x.get(0), 1e-6);
 		assertEquals(14, x.get(1), 1e-6);

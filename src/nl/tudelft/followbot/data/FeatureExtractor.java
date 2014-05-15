@@ -4,19 +4,23 @@ public class FeatureExtractor {
 
 	private final DataStack<Float> data;
 
-	public static FeatureExtractor fromFloat3(DataStack<float[]> data) {
+	public static FeatureExtractor fromFloat4(DataStack<float[]> data,
+			final long since) {
 		DataStack<Float> d = data.filter(new DataStack.Filter<float[]>() {
+			// Use all values since a certain time. For example we only have
+			// data points of the last 10 seconds. That's important when
+			// counting zero crossings
 			@Override
 			public boolean filter(float[] x) {
-				return x.length >= 3;
+				return x.length >= 4 && x[0] >= since;
 			}
 		}).map(new DataStack.Map<float[], Float>() {
 			@Override
 			public Float map(float[] x) {
 				// Multiply with the sign of the vertical axis, so it
 				// can count the zero crossings
-				return (x[0] * x[0] + x[1] * x[1] + x[2] * x[2])
-						* Math.signum(x[1]);
+				return (x[1] * x[1] + x[2] * x[2] + x[3] * x[3])
+						* Math.signum(x[2]);
 			}
 		});
 

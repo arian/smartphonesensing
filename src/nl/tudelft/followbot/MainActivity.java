@@ -238,10 +238,17 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		cal.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				FeatureExtractor f = FeatureExtractor.fromFloat3(cal.getData());
+				DataStack<float[]> d = cal.getData();
+				float[] last = d.peek();
+				long lastTime = (long) last[0];
+				long timeSinceStart = (long) (lastTime - calibrationTime * 1e9);
+				FeatureExtractor f = FeatureExtractor.fromFloat4(d,
+						timeSinceStart);
 
+				// Scale zero crossings so it has more or less the same range
+				// as the power
 				float[] values = new float[] {
-						f.zeroCrossings() / calibrationTime, f.avgPower() };
+						f.zeroCrossings() / calibrationTime * 500, f.avgPower() };
 
 				Log.d("Calibration", values[0] + " : " + values[1]);
 
@@ -261,7 +268,12 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		cal.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				FeatureExtractor f = FeatureExtractor.fromFloat3(cal.getData());
+				DataStack<float[]> d = cal.getData();
+				float[] last = d.peek();
+				long lastTime = (long) last[0];
+				long timeSinceStart = (long) (lastTime - calibrationTime * 1e9);
+				FeatureExtractor f = FeatureExtractor.fromFloat4(d,
+						timeSinceStart);
 				standFeature = new FeatureVector(walkClass, new float[] {
 						f.zeroCrossings() / calibrationTime, f.avgPower() });
 			}
