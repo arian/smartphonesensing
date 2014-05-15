@@ -26,6 +26,29 @@ public class FeatureExtractor {
 		return new FeatureExtractor(d);
 	}
 
+	public static float[] extractFeaturesFromFloat4(DataStack<float[]> data) {
+		if (data.getSize() > 0) {
+			float[] first = data.get(0);
+			float[] last = data.peek();
+
+			if (last.length > 0 && first.length > 0) {
+
+				long calTime = ((long) last[0]) - ((long) first[0]);
+
+				if (calTime > 0) {
+					FeatureExtractor f = FeatureExtractor.fromFloat4(data, 0);
+
+					// Scale zero crossings so it has more or less the same
+					// range
+					// as the power
+					return new float[] { f.zeroCrossings() / calTime * 500,
+							f.avgPower() };
+				}
+			}
+		}
+		return new float[] { 0, 0 };
+	}
+
 	public FeatureExtractor(DataStack<Float> d) {
 		data = d;
 	}

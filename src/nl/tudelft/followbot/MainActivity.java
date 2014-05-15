@@ -5,7 +5,9 @@ import java.util.Observer;
 
 import nl.tudelft.followbot.calibration.AccelerometerCalibration;
 import nl.tudelft.followbot.data.DataStack;
+import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.knn.FeatureVector;
+import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
 import nl.tudelft.followbot.sensors.Accelerometer;
 import nl.tudelft.followbot.sensors.SensorSink;
@@ -69,6 +71,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 	private FeatureVector walkFeature;
 	private final KNNClass standClass = new KNNClass("stand");
 	private final KNNClass walkClass = new KNNClass("walk");
+	private final KNN knn = new KNN();
 
 	private final String TAG = "FollowBot";
 
@@ -109,15 +112,8 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		accel.addListener(new SensorSink() {
 			@Override
 			public void push(SensorEvent event) {
-				float[] values = event.values;
-				Log.d(TAG, values[0] + "," + values[1] + "," + values[2]);
-			}
-		});
-
-		accel.addListener(new SensorSink() {
-			@Override
-			public void push(SensorEvent event) {
-				accelStack.push(event.values);
+				accelStack.push(new float[] { event.timestamp, event.values[0],
+						event.values[1], event.values[2] });
 			}
 		});
 
@@ -125,7 +121,6 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view);
 		mOpenCvCameraView.setMaxFrameSize(352, 288);
 		mOpenCvCameraView.setCvCameraViewListener(this);
-
 	}
 
 	@Override
@@ -249,7 +244,9 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		cal.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				standFeature = new FeatureVector(standClass, cal.getFeatures());
+				standFeature = new FeatureVector(standClass, FeatureExtractor
+						.extractFeaturesFromFloat4(cal.getData()));
+				knn.add(standFeature);
 			}
 		});
 
@@ -265,11 +262,20 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		cal.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				walkFeature = new FeatureVector(walkClass, cal.getFeatures());
+				walkFeature = new FeatureVector(walkClass, FeatureExtractor
+						.extractFeaturesFromFloat4(cal.getData()));
+				knn.add(walkFeature);
 			}
 		});
 
 		cal.start();
+	}
+
+	public void onClickDetectActivity(View view) {
+		FeatureVector feature = new FeatureVector(null,
+				FeatureExtractor.extractFeaturesFromFloat4(accelStack));
+		KNNClass klass = knn.classify(feature, 1);
+		Log.d(TAG, klass.getName());
 	}
 
 	public native void CircleObjectTrack(int greenHmin, int greenSmin,

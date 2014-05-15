@@ -3,7 +3,6 @@ package nl.tudelft.followbot.calibration;
 import java.util.Observable;
 
 import nl.tudelft.followbot.data.DataStack;
-import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.sensors.Accelerometer;
 import nl.tudelft.followbot.sensors.SensorSink;
 import android.hardware.SensorEvent;
@@ -87,15 +86,4 @@ public class AccelerometerCalibration extends Observable {
 		return data;
 	}
 
-	public float[] getFeatures() {
-		float[] first = data.get(0);
-		float[] last = data.peek();
-		long calTime = ((long) last[0]) - ((long) first[0]);
-		FeatureExtractor f = FeatureExtractor.fromFloat4(data, 0);
-
-		// Scale zero crossings so it has more or less the same range
-		// as the power
-		return new float[] { f.zeroCrossings() / calTime * 500, f.avgPower() };
-
-	}
 }

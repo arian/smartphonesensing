@@ -6,5 +6,6 @@
     <string name="hello_world">Hello world!</string>
     <string name="btn_cal_walk">Calibrate Walk</string>
     <string name="btn_cal_stand">Calibrate Stand</string>
+    <string name="btn_detect_activity">Detect Activity</string>
 
 </resources>
