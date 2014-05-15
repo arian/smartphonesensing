@@ -38,13 +38,21 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 	private static final int VIEW_MODE_THRESH = 2;
 	private static final int VIEW_MODE_OD_RGBA = 5;
 
-	private static final int THRESHOLD_HSV_HMIN = 120;
-	private static final int THRESHOLD_HSV_SMIN = 50;
-	private static final int THRESHOLD_HSV_VMIN = 50;
+	private static final int THRESH_GREEN_HMIN = 30;
+	private static final int THRESH_GREEN_SMIN = 80;
+	private static final int THRESH_GREEN_VMIN = 80;
 
-	private static final int THRESHOLD_HSV_HMAX = 200;
-	private static final int THRESHOLD_HSV_SMAX = 255;
-	private static final int THRESHOLD_HSV_VMAX = 255;
+	private static final int THRESH_GREEN_HMAX = 50;
+	private static final int THRESH_GREEN_SMAX = 255;
+	private static final int THRESH_GREEN_VMAX = 255;
+
+	private static final int THRESH_BLUE_HMIN = 0;
+	private static final int THRESH_BLUE_SMIN = 70;
+	private static final int THRESH_BLUE_VMIN = 70;
+
+	private static final int THRESH_BLUE_HMAX = 15;
+	private static final int THRESH_BLUE_SMAX = 255;
+	private static final int THRESH_BLUE_VMAX = 255;
 
 	private int mViewMode;
 	private Mat mRgba;
@@ -192,9 +200,11 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 			mRgba = inputFrame.rgba();
 			mGray = inputFrame.gray();
 
-			CircleObjectTrack(THRESHOLD_HSV_HMIN, THRESHOLD_HSV_SMIN,
-					THRESHOLD_HSV_VMIN, THRESHOLD_HSV_HMAX, THRESHOLD_HSV_SMAX,
-					THRESHOLD_HSV_VMAX, mRgba.width(), mRgba.height(),
+			CircleObjectTrack(THRESH_GREEN_HMIN, THRESH_GREEN_SMIN,
+					THRESH_GREEN_VMIN, THRESH_GREEN_HMAX, THRESH_GREEN_SMAX,
+					THRESH_GREEN_VMAX, THRESH_BLUE_HMIN, THRESH_BLUE_SMIN,
+					THRESH_BLUE_VMIN, THRESH_BLUE_HMAX, THRESH_BLUE_SMAX,
+					THRESH_BLUE_VMAX, mRgba.width(), mRgba.height(),
 					mGray.getNativeObjAddr(), mRgba.getNativeObjAddr(), true);
 
 			break;
@@ -203,9 +213,11 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 			mRgba = inputFrame.rgba();
 			mGray = inputFrame.gray();
 
-			CircleObjectTrack(THRESHOLD_HSV_HMIN, THRESHOLD_HSV_SMIN,
-					THRESHOLD_HSV_VMIN, THRESHOLD_HSV_HMAX, THRESHOLD_HSV_SMAX,
-					THRESHOLD_HSV_VMAX, mRgba.width(), mRgba.height(),
+			CircleObjectTrack(THRESH_GREEN_HMIN, THRESH_GREEN_SMIN,
+					THRESH_GREEN_VMIN, THRESH_GREEN_HMAX, THRESH_GREEN_SMAX,
+					THRESH_GREEN_VMAX, THRESH_BLUE_HMIN, THRESH_BLUE_SMIN,
+					THRESH_BLUE_VMIN, THRESH_BLUE_HMAX, THRESH_BLUE_SMAX,
+					THRESH_BLUE_VMAX, mRgba.width(), mRgba.height(),
 					mGray.getNativeObjAddr(), mRgba.getNativeObjAddr(), false);
 
 			break;
@@ -263,7 +275,9 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		cal.start();
 	}
 
-	public native void CircleObjectTrack(int hmin, int smin, int vmin,
-			int hmax, int smax, int vmax, int width, int height,
-			long matAddrGr, long matAddrRgba, boolean debug);
+	public native void CircleObjectTrack(int greenHmin, int greenSmin,
+			int greenVmin, int greenHmax, int greenSmax, int greenVmax,
+			int blueHmin, int blueSmin, int blueVmin, int blueHmax,
+			int blueSmax, int blueVmax, int width, int height, long matAddrGr,
+			long matAddrRgba, boolean debug);
 }
