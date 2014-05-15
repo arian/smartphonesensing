@@ -71,17 +71,21 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_MainActivity_CircleObjectTrack(
 											blue_thresh->height/4, 100, 40, 10, 80);
 										
 	// Draw and connect the three circles
-	float* c1 = (float*)cvGetSeqElem(green_circles, 0);
-	float* c2 = (float*)cvGetSeqElem(blue_circles, 0);
-	float* c3 = (float*)cvGetSeqElem(blue_circles, 1);
-	
-	circle(mRgba, Point(c1[0], c1[1]), c1[2], Scalar(0, 255, 0, 255), 4);
-	circle(mRgba, Point(c2[0], c2[1]), c2[2], Scalar(0, 0, 255, 255), 4);
-	circle(mRgba, Point(c3[0], c3[1]), c3[2], Scalar(0, 0, 255, 255), 4);
-	
-	line(mRgba, Point(c1[0], c1[1]), Point(c2[0], c2[1]), Scalar(0, 0, 255, 255), 2);
-	line(mRgba, Point(c1[0], c1[1]), Point(c3[0], c3[1]), Scalar(0, 0, 255, 255), 2);
-	line(mRgba, Point(c3[0], c3[1]), Point(c2[0], c2[1]), Scalar(0, 255, 0, 255), 2);
+	if ((green_circles->total >= 1) && (blue_circles->total >= 2)) {
+		float* c1 = (float*)cvGetSeqElem(green_circles, 0);
+		float* c2 = (float*)cvGetSeqElem(blue_circles, 0);
+		float* c3 = (float*)cvGetSeqElem(blue_circles, 1);
+		
+		circle(mRgba, Point(c1[0], c1[1]), c1[2], Scalar(0, 255, 0, 255), 4);
+		circle(mRgba, Point(c2[0], c2[1]), c2[2], Scalar(0, 0, 255, 255), 4);
+		circle(mRgba, Point(c3[0], c3[1]), c3[2], Scalar(0, 0, 255, 255), 4);
+		
+		line(mRgba, Point(c1[0], c1[1]), Point(c2[0], c2[1]), Scalar(0, 0, 255, 255), 2);
+		line(mRgba, Point(c1[0], c1[1]), Point(c3[0], c3[1]), Scalar(0, 0, 255, 255), 2);
+		line(mRgba, Point(c3[0], c3[1]), Point(c2[0], c2[1]), Scalar(0, 255, 0, 255), 2);
+		
+		line(mRgba, Point((c2[0] + c3[0])/2, (c2[1] + c3[1])/2), Point(c1[0], c1[1]), Scalar(255, 0, 0, 255), 2);
+	}
 	
     // Cleanup resources
     cvReleaseMemStorage(&green_storage);
