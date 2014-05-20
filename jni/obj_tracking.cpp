@@ -99,8 +99,16 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 		int translation_X = centroid_X - width / 2;
 		int translation_Y = height / 2 - centroid_Y;
 		
-		// Compute phone-robot distance
-		//int distance_phone = 
+		// Phone-robot distance
+		float distance_phone;
+		
+		// Find the largest radius
+		if ((c1[2] >= c2[2]) && (c1[2] >= c3[2]))
+			distance_phone = (-c1[2] + 125) * (5 / 13);
+		else if ((c2[2] >= c1[2]) && (c2[2] >= c3[2]))
+			distance_phone = (-c2[2] + 125) * (5 / 13);
+		else if ((c3[2] >= c1[2]) && (c3[2] >= c2[2]))
+			distance_phone = (-c3[2] + 125) * (5 / 13);
 		
 		// Compute lengths of triangle sides
 		float a = sqrt((c2[0]-c3[0])*(c2[0]-c3[0]) + (c2[1]-c3[1])*(c2[1]-c3[1]));
@@ -136,9 +144,12 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 			beta = (-cu + 180) * 0.75;
 		}
 		
+		// Compute user-robot distance
+		float distance_user = distance_phone * cos(beta * CV_PI / 180);
+		
 		sprintf(text, "%d, %d, %d, %d", alpha, beta, translation_X, translation_Y);
 		putText(mRgba, text, Point(20, 50), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
-		sprintf(text, "%f, %f, %f", c1[2], c2[2], c3[2]);
+		sprintf(text, "%3.2f, %3.2f", distance_phone, distance_user);
 		putText(mRgba, text, Point(20, 65), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
 		
 		// Get a reference to this object's class
@@ -174,6 +185,22 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 		if (NULL != fid) {
 			// Change the variable's value
 			env->SetIntField(thiz, fid, translation_Y);
+		}
+		
+		// Get the Field ID of the instance variable "distancePhoneRobot"
+		fid = env->GetFieldID(thisClass, "distancePhoneRobot", "F");
+		
+		if (NULL != fid) {
+			// Change the variable's value
+			env->SetIntField(thiz, fid, distance_phone);
+		}
+		
+		// Get the Field ID of the instance variable "distanceUserRobot"
+		fid = env->GetFieldID(thisClass, "distanceUserRobot", "F");
+		
+		if (NULL != fid) {
+			// Change the variable's value
+			env->SetIntField(thiz, fid, distance_user);
 		}
 	}
 	

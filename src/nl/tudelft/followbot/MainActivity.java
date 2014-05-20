@@ -205,7 +205,12 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 					mRgba.height(), mGray.getNativeObjAddr(),
 					mRgba.getNativeObjAddr(), true);
 
-			Log.d("Position", positionEstimation.getAngleSkew() + "");
+			Log.d("Position", positionEstimation.getAngleSkew() + " "
+					+ positionEstimation.getAngleOrientation() + " "
+					+ positionEstimation.getTranslationHorizontal() + " "
+					+ positionEstimation.getTranslationVertical() + " "
+					+ positionEstimation.getDistancePhoneRobot() + " "
+					+ positionEstimation.getDistanceUserRobot() + "");
 
 			break;
 		case VIEW_MODE_OD_RGBA:
@@ -224,7 +229,9 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 			Log.d("Position", positionEstimation.getAngleSkew() + " "
 					+ positionEstimation.getAngleOrientation() + " "
 					+ positionEstimation.getTranslationHorizontal() + " "
-					+ positionEstimation.getTranslationVertical() + "");
+					+ positionEstimation.getTranslationVertical() + " "
+					+ positionEstimation.getDistancePhoneRobot() + " "
+					+ positionEstimation.getDistanceUserRobot() + "");
 
 			break;
 		}
