@@ -15,12 +15,8 @@ import nl.tudelft.followbot.sensors.SensorSink;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
 
 import android.app.Activity;
 import android.content.Context;
@@ -34,39 +30,12 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 
-public class MainActivity extends Activity implements CvCameraViewListener2 {
-
-	private static final int VIEW_MODE_RGBA = 0;
-	private static final int VIEW_MODE_THRESH = 2;
-	private static final int VIEW_MODE_OD_RGBA = 5;
-
-	private static final int THRESH_GREEN_HMIN = 30;
-	private static final int THRESH_GREEN_SMIN = 50;
-	private static final int THRESH_GREEN_VMIN = 50;
-
-	private static final int THRESH_GREEN_HMAX = 50;
-	private static final int THRESH_GREEN_SMAX = 255;
-	private static final int THRESH_GREEN_VMAX = 255;
-
-	private static final int THRESH_BLUE_HMIN = 0;
-	private static final int THRESH_BLUE_SMIN = 50;
-	private static final int THRESH_BLUE_VMIN = 50;
-
-	private static final int THRESH_BLUE_HMAX = 15;
-	private static final int THRESH_BLUE_SMAX = 255;
-	private static final int THRESH_BLUE_VMAX = 255;
-
-	private int mViewMode;
-	private Mat mRgba;
-	private Mat mGray;
-
+public class MainActivity extends Activity {
 	private MenuItem mItemPreviewRGBA;
 	private MenuItem mItemPreviewThresh;
 	private MenuItem mItemPreviewOdRGBA;
 
-	private CameraBridgeViewBase mOpenCvCameraView;
-
-	private final CameraEstimator positionEstimation = new CameraEstimator();
+	private final CameraEstimator cameraEstimation = new CameraEstimator();
 
 	private Accelerometer accel;
 
@@ -91,7 +60,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 				// Load native library after(!) OpenCV initialization
 				System.loadLibrary("object_tracking");
 
-				mOpenCvCameraView.enableView();
+				cameraEstimation.enableCamera();
 			}
 				break;
 			default: {
@@ -121,17 +90,16 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		});
 
 		// open new camera view
-		mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view);
-		mOpenCvCameraView.setMaxFrameSize(480, 360);
-		mOpenCvCameraView.setCvCameraViewListener(this);
+		cameraEstimation.openCameraView(
+				(CameraBridgeViewBase) findViewById(R.id.surface_view), 480,
+				360);
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
 
-		if (mOpenCvCameraView != null)
-			mOpenCvCameraView.disableView();
+		cameraEstimation.disableCamera();
 
 		if (accel != null) {
 			accel.pause();
@@ -154,9 +122,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 	public void onDestroy() {
 		super.onDestroy();
 
-		if (mOpenCvCameraView != null) {
-			mOpenCvCameraView.disableView();
-		}
+		cameraEstimation.disableCamera();
 	}
 
 	@Override
@@ -172,83 +138,15 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 	}
 
 	@Override
-	public void onCameraViewStarted(int width, int height) {
-		mRgba = new Mat(height, width, CvType.CV_8UC4);
-		mGray = new Mat(height, width, CvType.CV_8UC1);
-	}
-
-	@Override
-	public void onCameraViewStopped() {
-		mRgba.release();
-		mGray.release();
-	}
-
-	@Override
-	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-		final int viewMode = mViewMode;
-
-		switch (viewMode) {
-		case VIEW_MODE_RGBA:
-			// input frame has RBGA format
-			mRgba = inputFrame.rgba();
-			break;
-		case VIEW_MODE_THRESH:
-			// input frame has RGBA format
-			mRgba = inputFrame.rgba();
-			mGray = inputFrame.gray();
-
-			positionEstimation.CircleObjectTrack(THRESH_GREEN_HMIN,
-					THRESH_GREEN_SMIN, THRESH_GREEN_VMIN, THRESH_GREEN_HMAX,
-					THRESH_GREEN_SMAX, THRESH_GREEN_VMAX, THRESH_BLUE_HMIN,
-					THRESH_BLUE_SMIN, THRESH_BLUE_VMIN, THRESH_BLUE_HMAX,
-					THRESH_BLUE_SMAX, THRESH_BLUE_VMAX, mRgba.width(),
-					mRgba.height(), mGray.getNativeObjAddr(),
-					mRgba.getNativeObjAddr(), true);
-
-			Log.d("Position", positionEstimation.getAngleSkew() + " "
-					+ positionEstimation.getAngleOrientation() + " "
-					+ positionEstimation.getTranslationHorizontal() + " "
-					+ positionEstimation.getTranslationVertical() + " "
-					+ positionEstimation.getDistancePhoneRobot() + " "
-					+ positionEstimation.getDistanceUserRobot() + "");
-
-			break;
-		case VIEW_MODE_OD_RGBA:
-			// input frame has RGBA format
-			mRgba = inputFrame.rgba();
-			mGray = inputFrame.gray();
-
-			positionEstimation.CircleObjectTrack(THRESH_GREEN_HMIN,
-					THRESH_GREEN_SMIN, THRESH_GREEN_VMIN, THRESH_GREEN_HMAX,
-					THRESH_GREEN_SMAX, THRESH_GREEN_VMAX, THRESH_BLUE_HMIN,
-					THRESH_BLUE_SMIN, THRESH_BLUE_VMIN, THRESH_BLUE_HMAX,
-					THRESH_BLUE_SMAX, THRESH_BLUE_VMAX, mRgba.width(),
-					mRgba.height(), mGray.getNativeObjAddr(),
-					mRgba.getNativeObjAddr(), false);
-
-			Log.d("Position", positionEstimation.getAngleSkew() + " "
-					+ positionEstimation.getAngleOrientation() + " "
-					+ positionEstimation.getTranslationHorizontal() + " "
-					+ positionEstimation.getTranslationVertical() + " "
-					+ positionEstimation.getDistancePhoneRobot() + " "
-					+ positionEstimation.getDistanceUserRobot() + "");
-
-			break;
-		}
-
-		return mRgba;
-	}
-
-	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		Log.i(TAG, "called onOptionsItemSelected; selected item: " + item);
 
 		if (item == mItemPreviewRGBA) {
-			mViewMode = VIEW_MODE_RGBA;
+			cameraEstimation.setViewMode(CameraEstimator.VIEW_MODE_RGBA);
 		} else if (item == mItemPreviewThresh) {
-			mViewMode = VIEW_MODE_THRESH;
+			cameraEstimation.setViewMode(CameraEstimator.VIEW_MODE_THRESH);
 		} else if (item == mItemPreviewOdRGBA) {
-			mViewMode = VIEW_MODE_OD_RGBA;
+			cameraEstimation.setViewMode(CameraEstimator.VIEW_MODE_OD_RGBA);
 		}
 
 		return true;
