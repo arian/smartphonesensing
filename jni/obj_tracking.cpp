@@ -9,17 +9,17 @@ using namespace std;
 using namespace cv;
 
 extern "C" {
-JNIEXPORT void JNICALL Java_nl_tudelft_followbot_MainActivity_CircleObjectTrack(JNIEnv* env, jobject thiz,
+JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleObjectTrack(JNIEnv* env, jobject thiz,
     jint greenHmin, jint greenSmin, jint greenVmin, jint greenHmax, jint greenSmax, jint greenVmax,
 	jint blueHmin, jint blueSmin, jint blueVmin, jint blueHmax, jint blueSmax, jint blueVmax,
 	jint width, jint height, jlong addrGray, jlong addrRgba, jboolean debug);
 	
-JNIEXPORT void JNICALL Java_nl_tudelft_followbot_MainActivity_CircleObjectTrack(JNIEnv* env, jobject thiz,
+JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleObjectTrack(JNIEnv* env, jobject thiz,
     jint greenHmin, jint greenSmin, jint greenVmin, jint greenHmax, jint greenSmax, jint greenVmax,
 	jint blueHmin, jint blueSmin, jint blueVmin, jint blueHmax, jint blueSmax, jint blueVmax,
 	jint width, jint height, jlong addrGray, jlong addrRgba, jboolean debug)
 {
-    Mat& mGray = *(Mat*)addrGray;
+	Mat& mGray = *(Mat*)addrGray;
     Mat& mRgba = *(Mat*)addrRgba;
 
     CvSize size = cvSize(width, height);
@@ -85,9 +85,99 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_MainActivity_CircleObjectTrack(
 		line(mRgba, Point(c3[0], c3[1]), Point(c2[0], c2[1]), Scalar(0, 255, 0, 255), 2);
 		
 		line(mRgba, Point((c2[0] + c3[0])/2, (c2[1] + c3[1])/2), Point(c1[0], c1[1]), Scalar(255, 0, 0, 255), 2);
+		
+		char text[255];
+		
+		// Compute slope angle of the line between the two blue markers (robot orientation)
+		int alpha = atan2((c2[1] - c3[1]), (c2[0] - c3[0])) * (180 / CV_PI);
+		
+		// Compute triangle centroid position
+		int centroid_X = c1[0] + ((c2[0] + c3[0]) / 2 - c1[0]) * (2/3);
+		int centroid_Y = c1[1] + ((c2[1] + c3[1]) / 2 - c1[1]) * (2/3);
+		
+		// Compute translation values
+		int translation_X = centroid_X - width / 2;
+		int translation_Y = height / 2 - centroid_Y;
+		
+		// Compute phone-robot distance
+		//int distance_phone = 
+		
+		// Compute lengths of triangle sides
+		float a = sqrt((c2[0]-c3[0])*(c2[0]-c3[0]) + (c2[1]-c3[1])*(c2[1]-c3[1]));
+		float b = sqrt((c1[0]-c3[0])*(c1[0]-c3[0]) + (c1[1]-c3[1])*(c1[1]-c3[1]));
+		float c = sqrt((c1[0]-c2[0])*(c1[0]-c2[0]) + (c1[1]-c2[1])*(c1[1]-c2[1]));
+		
+		// Compute triangle angles
+		float au = acosf(((b*b + c*c - a*a) / (2*b*c))) * (180 / CV_PI);
+		float bu = acosf(((a*a + c*c - b*b) / (2*a*c))) * (180 / CV_PI);
+		float cu = acosf(((b*b + a*a - c*c) / (2*b*a))) * (180 / CV_PI);
+		
+		int beta;
+		
+		sprintf(text, "%d, %d, %d", (int)au, (int)bu, (int)cu);
+		putText(mRgba, text, Point(20, 40), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
+		
+		// Find the largest angle and use it in the linear formula for computing the skew:
+		// beta = -0.75*max_angle + 0.75*180
+		// This gives a decent estimate without the need to calibrate the camera or take pictures of the robot
+		if ((au >= bu) && (au >= cu)) {
+			sprintf(text, "%d", (int)au);
+			putText(mRgba, text, Point(c1[0], c1[1]), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
+			beta = (-au + 180) * 0.75;
+		}
+		else if ((bu >= au) && (bu >= cu)) {
+			sprintf(text, "%d", (int)bu);
+			putText(mRgba, text, Point(c2[0], c2[1]), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
+			beta = (-bu + 180) * 0.75;
+		}
+		else if ((cu >= au) && (cu >= bu)) {
+			sprintf(text, "%d", (int)cu);
+			putText(mRgba, text, Point(c3[0], c3[1]), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
+			beta = (-cu + 180) * 0.75;
+		}
+		
+		sprintf(text, "%d, %d, %d, %d", alpha, beta, translation_X, translation_Y);
+		putText(mRgba, text, Point(20, 50), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
+		sprintf(text, "%f, %f, %f", c1[2], c2[2], c3[2]);
+		putText(mRgba, text, Point(20, 65), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
+		
+		// Get a reference to this object's class
+		jclass thisClass = env->GetObjectClass(thiz);
+		
+		// Get the Field ID of the instance variable "angleSkew"
+		jfieldID fid = env->GetFieldID(thisClass, "angleSkew", "I");
+		
+		if (NULL != fid) {
+			// Change the variable's value
+			env->SetIntField(thiz, fid, beta);
+		}
+		
+		// Get the Field ID of the instance variable "angleOrientation"
+		fid = env->GetFieldID(thisClass, "angleOrientation", "I");
+		
+		if (NULL != fid) {
+			// Change the variable's value
+			env->SetIntField(thiz, fid, alpha);
+		}
+		
+		// Get the Field ID of the instance variable "translationHorizontal"
+		fid = env->GetFieldID(thisClass, "translationHorizontal", "I");
+		
+		if (NULL != fid) {
+			// Change the variable's value
+			env->SetIntField(thiz, fid, translation_X);
+		}
+		
+		// Get the Field ID of the instance variable "translationVertical"
+		fid = env->GetFieldID(thisClass, "translationVertical", "I");
+		
+		if (NULL != fid) {
+			// Change the variable's value
+			env->SetIntField(thiz, fid, translation_Y);
+		}
 	}
 	
-    // Cleanup resources
+	// Cleanup resources
     cvReleaseMemStorage(&green_storage);
 	cvReleaseMemStorage(&blue_storage);
     cvReleaseImage(&hsv_frame);

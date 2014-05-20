@@ -4,6 +4,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import nl.tudelft.followbot.calibration.AccelerometerCalibration;
+import nl.tudelft.followbot.camera.CameraEstimator;
 import nl.tudelft.followbot.data.DataStack;
 import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.knn.FeatureVector;
@@ -40,16 +41,16 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 	private static final int VIEW_MODE_OD_RGBA = 5;
 
 	private static final int THRESH_GREEN_HMIN = 30;
-	private static final int THRESH_GREEN_SMIN = 70;
-	private static final int THRESH_GREEN_VMIN = 70;
+	private static final int THRESH_GREEN_SMIN = 50;
+	private static final int THRESH_GREEN_VMIN = 50;
 
 	private static final int THRESH_GREEN_HMAX = 50;
 	private static final int THRESH_GREEN_SMAX = 255;
 	private static final int THRESH_GREEN_VMAX = 255;
 
 	private static final int THRESH_BLUE_HMIN = 0;
-	private static final int THRESH_BLUE_SMIN = 70;
-	private static final int THRESH_BLUE_VMIN = 70;
+	private static final int THRESH_BLUE_SMIN = 50;
+	private static final int THRESH_BLUE_VMIN = 50;
 
 	private static final int THRESH_BLUE_HMAX = 15;
 	private static final int THRESH_BLUE_SMAX = 255;
@@ -64,6 +65,8 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 	private MenuItem mItemPreviewOdRGBA;
 
 	private CameraBridgeViewBase mOpenCvCameraView;
+
+	private final CameraEstimator positionEstimation = new CameraEstimator();
 
 	private Accelerometer accel;
 
@@ -119,7 +122,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 
 		// open new camera view
 		mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view);
-		mOpenCvCameraView.setMaxFrameSize(352, 288);
+		mOpenCvCameraView.setMaxFrameSize(480, 360);
 		mOpenCvCameraView.setCvCameraViewListener(this);
 	}
 
@@ -194,12 +197,15 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 			mRgba = inputFrame.rgba();
 			mGray = inputFrame.gray();
 
-			CircleObjectTrack(THRESH_GREEN_HMIN, THRESH_GREEN_SMIN,
-					THRESH_GREEN_VMIN, THRESH_GREEN_HMAX, THRESH_GREEN_SMAX,
-					THRESH_GREEN_VMAX, THRESH_BLUE_HMIN, THRESH_BLUE_SMIN,
-					THRESH_BLUE_VMIN, THRESH_BLUE_HMAX, THRESH_BLUE_SMAX,
-					THRESH_BLUE_VMAX, mRgba.width(), mRgba.height(),
-					mGray.getNativeObjAddr(), mRgba.getNativeObjAddr(), true);
+			positionEstimation.CircleObjectTrack(THRESH_GREEN_HMIN,
+					THRESH_GREEN_SMIN, THRESH_GREEN_VMIN, THRESH_GREEN_HMAX,
+					THRESH_GREEN_SMAX, THRESH_GREEN_VMAX, THRESH_BLUE_HMIN,
+					THRESH_BLUE_SMIN, THRESH_BLUE_VMIN, THRESH_BLUE_HMAX,
+					THRESH_BLUE_SMAX, THRESH_BLUE_VMAX, mRgba.width(),
+					mRgba.height(), mGray.getNativeObjAddr(),
+					mRgba.getNativeObjAddr(), true);
+
+			Log.d("Position", positionEstimation.getAngleSkew() + "");
 
 			break;
 		case VIEW_MODE_OD_RGBA:
@@ -207,12 +213,18 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 			mRgba = inputFrame.rgba();
 			mGray = inputFrame.gray();
 
-			CircleObjectTrack(THRESH_GREEN_HMIN, THRESH_GREEN_SMIN,
-					THRESH_GREEN_VMIN, THRESH_GREEN_HMAX, THRESH_GREEN_SMAX,
-					THRESH_GREEN_VMAX, THRESH_BLUE_HMIN, THRESH_BLUE_SMIN,
-					THRESH_BLUE_VMIN, THRESH_BLUE_HMAX, THRESH_BLUE_SMAX,
-					THRESH_BLUE_VMAX, mRgba.width(), mRgba.height(),
-					mGray.getNativeObjAddr(), mRgba.getNativeObjAddr(), false);
+			positionEstimation.CircleObjectTrack(THRESH_GREEN_HMIN,
+					THRESH_GREEN_SMIN, THRESH_GREEN_VMIN, THRESH_GREEN_HMAX,
+					THRESH_GREEN_SMAX, THRESH_GREEN_VMAX, THRESH_BLUE_HMIN,
+					THRESH_BLUE_SMIN, THRESH_BLUE_VMIN, THRESH_BLUE_HMAX,
+					THRESH_BLUE_SMAX, THRESH_BLUE_VMAX, mRgba.width(),
+					mRgba.height(), mGray.getNativeObjAddr(),
+					mRgba.getNativeObjAddr(), false);
+
+			Log.d("Position", positionEstimation.getAngleSkew() + " "
+					+ positionEstimation.getAngleOrientation() + " "
+					+ positionEstimation.getTranslationHorizontal() + " "
+					+ positionEstimation.getTranslationVertical() + "");
 
 			break;
 		}
@@ -277,10 +289,4 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		KNNClass klass = knn.classify(feature, 1);
 		Log.d(TAG, klass.getName());
 	}
-
-	public native void CircleObjectTrack(int greenHmin, int greenSmin,
-			int greenVmin, int greenHmax, int greenSmax, int greenVmax,
-			int blueHmin, int blueSmin, int blueVmin, int blueHmax,
-			int blueSmax, int blueVmax, int width, int height, long matAddrGr,
-			long matAddrRgba, boolean debug);
 }
