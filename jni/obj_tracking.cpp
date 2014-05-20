@@ -151,7 +151,10 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 		
 		sprintf(text, "%d, %d, %d, %d", alpha, beta, translation_X, translation_Y);
 		putText(mRgba, text, Point(20, 50), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
-		sprintf(text, "%3.10f, %3.10f", distance_phone, distance_user);
+		sprintf(text, "%3.2f, %3.2f, %3.2f",
+				-24.0 / 31.0 * c1[2] + 1995.0 / 31.0,
+				-1 * c1[2] + 70.0,
+				-9.0 / 16.0 * c1[2] + 105.0 / 2.0);
 		putText(mRgba, text, Point(20, 65), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
 		
 		// Get a reference to this object's class

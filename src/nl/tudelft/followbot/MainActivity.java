@@ -54,18 +54,14 @@ public class MainActivity extends Activity {
 		@Override
 		public void onManagerConnected(int status) {
 			switch (status) {
-			case LoaderCallbackInterface.SUCCESS: {
+			case LoaderCallbackInterface.SUCCESS:
 				// Log.i(TAG, "OpenCV loaded successfully");
-
 				// Load native library after(!) OpenCV initialization
 				System.loadLibrary("object_tracking");
-
 				cameraEstimation.enableCamera();
-			}
 				break;
-			default: {
+			default:
 				super.onManagerConnected(status);
-			}
 				break;
 			}
 		}
@@ -121,7 +117,6 @@ public class MainActivity extends Activity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-
 		cameraEstimation.disableCamera();
 	}
 

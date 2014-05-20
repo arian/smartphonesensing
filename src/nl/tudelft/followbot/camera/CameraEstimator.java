@@ -9,6 +9,7 @@ import org.opencv.core.Mat;
 import android.util.Log;
 
 public class CameraEstimator implements CvCameraViewListener2 {
+
 	public static final int VIEW_MODE_RGBA = 0;
 	public static final int VIEW_MODE_THRESH = 2;
 	public static final int VIEW_MODE_OD_RGBA = 5;
@@ -17,7 +18,7 @@ public class CameraEstimator implements CvCameraViewListener2 {
 	private static final int THRESH_GREEN_SMIN = 50;
 	private static final int THRESH_GREEN_VMIN = 50;
 
-	private static final int THRESH_GREEN_HMAX = 50;
+	private static final int THRESH_GREEN_HMAX = 60;
 	private static final int THRESH_GREEN_SMAX = 255;
 	private static final int THRESH_GREEN_VMAX = 255;
 
@@ -25,7 +26,7 @@ public class CameraEstimator implements CvCameraViewListener2 {
 	private static final int THRESH_BLUE_SMIN = 50;
 	private static final int THRESH_BLUE_VMIN = 50;
 
-	private static final int THRESH_BLUE_HMAX = 15;
+	private static final int THRESH_BLUE_HMAX = 25;
 	private static final int THRESH_BLUE_SMAX = 255;
 	private static final int THRESH_BLUE_VMAX = 255;
 
@@ -35,12 +36,12 @@ public class CameraEstimator implements CvCameraViewListener2 {
 
 	private CameraBridgeViewBase mOpenCvCameraView;
 
-	private float distancePhoneRobot = 0;
-	private float distanceUserRobot = 0;
-	private int angleOrientation = 0;
-	private int angleSkew = 0;
-	private int translationHorizontal = 0;
-	private int translationVertical = 0;
+	private final float distancePhoneRobot = 0;
+	private final float distanceUserRobot = 0;
+	private final int angleOrientation = 0;
+	private final int angleSkew = 0;
+	private final int translationHorizontal = 0;
+	private final int translationVertical = 0;
 
 	public void enableCamera() {
 		mOpenCvCameraView.enableView();
