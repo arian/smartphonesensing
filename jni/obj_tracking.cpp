@@ -100,15 +100,17 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 		int translation_Y = height / 2 - centroid_Y;
 		
 		// Phone-robot distance
-		float distance_phone;
+		float distance_phone = c1[2];
 		
 		// Find the largest radius
-		if ((c1[2] >= c2[2]) && (c1[2] >= c3[2]))
-			distance_phone = (-c1[2] + 125) * (5 / 13);
-		else if ((c2[2] >= c1[2]) && (c2[2] >= c3[2]))
-			distance_phone = (-c2[2] + 125) * (5 / 13);
-		else if ((c3[2] >= c1[2]) && (c3[2] >= c2[2]))
-			distance_phone = (-c3[2] + 125) * (5 / 13);
+		if (c2[2] > distance_phone) {
+			distance_phone = c2[2];
+		}
+		if (c3[2] > distance_phone) {
+			distance_phone = c3[2];
+		}
+
+		distance_phone = (-distance_phone + 125) * (5.0 / 13.0);
 		
 		// Compute lengths of triangle sides
 		float a = sqrt((c2[0]-c3[0])*(c2[0]-c3[0]) + (c2[1]-c3[1])*(c2[1]-c3[1]));
@@ -149,7 +151,7 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 		
 		sprintf(text, "%d, %d, %d, %d", alpha, beta, translation_X, translation_Y);
 		putText(mRgba, text, Point(20, 50), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
-		sprintf(text, "%3.2f, %3.2f", distance_phone, distance_user);
+		sprintf(text, "%3.10f, %3.10f", distance_phone, distance_user);
 		putText(mRgba, text, Point(20, 65), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
 		
 		// Get a reference to this object's class
