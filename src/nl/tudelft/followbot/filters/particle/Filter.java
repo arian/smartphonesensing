@@ -77,7 +77,7 @@ public class Filter {
 	/**
 	 * Distance Measurement from the phone camera or estimated from the activity
 	 * monitoring
-	 * 
+	 *
 	 * @param distance
 	 * @param sigma
 	 */
@@ -93,7 +93,7 @@ public class Filter {
 	/**
 	 * Orientation Measurement from the phone camera or from the the orientation
 	 * sensor
-	 * 
+	 *
 	 * @param orientation
 	 * @param sigma
 	 */
@@ -108,7 +108,7 @@ public class Filter {
 
 	/**
 	 * User moves d meters in direction alpha, with std deviation sigma
-	 * 
+	 *
 	 * @param d
 	 * @param alpha
 	 * @param sigma
@@ -140,7 +140,7 @@ public class Filter {
 
 	/**
 	 * User rotates, so all particles rotate around the origin
-	 * 
+	 *
 	 * @param rot
 	 *            difference in radians
 	 * @link http://en.wikipedia.org/wiki/Rotation_(mathematics)#Two_dimensions
@@ -156,10 +156,10 @@ public class Filter {
 
 	/**
 	 * Robot moves d meters along its direction, with std deviation sigma
-	 * 
+	 *
 	 * @param d
 	 * @param sigma
-	 * 
+	 *
 	 *            TODO: Add actual robot movement through IOIO
 	 */
 	public void robotMove(double d, double sigma) {
@@ -177,10 +177,10 @@ public class Filter {
 
 	/**
 	 * Robot rotates with angle alpha [rad], with std deviation sigma
-	 * 
+	 *
 	 * @param d
 	 * @param sigma
-	 * 
+	 *
 	 *            TODO: Add actual robot movement through IOIO
 	 */
 	public void robotRotate(double alpha, double sigma) {
@@ -215,12 +215,10 @@ public class Filter {
 		}
 
 		return (orientation / particles.size());
-
 	}
 
 	public double[][] getPositions() {
-		double[][] x = new double[3][particles.size()];
-
+		double[][] x = new double[2][particles.size()];
 		for (int i = 0; i < particles.size(); i++) {
 			Particle p = particles.get(i);
 			x[0][i] = p.getX();
@@ -230,4 +228,5 @@ public class Filter {
 
 		return x;
 	}
+
 }
