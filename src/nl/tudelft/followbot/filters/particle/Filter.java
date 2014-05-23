@@ -43,7 +43,6 @@ public class Filter {
 				sum += p.getWeight();
 
 				if (sum > x) {
-					// System.out.println(x + " -> " + sum + " -> " + p);
 					Particle newParticle = p.clone();
 					newParticle.setWeight(newWeight);
 					ps.add(newParticle);
