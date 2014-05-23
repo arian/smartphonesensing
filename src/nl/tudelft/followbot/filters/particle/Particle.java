@@ -20,7 +20,7 @@ public class Particle {
 	/**
 	 * Orientation relative to user
 	 */
-	private final double a = 0;
+	private double a = 0;
 
 	public Particle(double x, double y) {
 		setX(x);
@@ -32,6 +32,7 @@ public class Particle {
 	}
 
 	public void setWeight(double weight) {
+		assert w >= 0 : "Weight should be positive";
 		w = weight;
 	}
 
@@ -53,6 +54,24 @@ public class Particle {
 
 	public double getOrientation() {
 		return a;
+	}
+
+	public double distanceToSquare(double x, double y) {
+		double dx = this.x - x;
+		double dy = this.y - y;
+		return dx * dx + dy * dy;
+	}
+
+	@Override
+	public Particle clone() {
+		Particle clone = new Particle(x, y);
+		clone.a = a;
+		return clone;
+	}
+
+	@Override
+	public String toString() {
+		return "(" + x + "," + y + "," + a + ")";
 	}
 
 }
