@@ -3,6 +3,7 @@ package nl.tudelft.followbot;
 import java.util.Observable;
 import java.util.Observer;
 
+import nl.tudelft.followbot.bluetooth.Bluetooth;
 import nl.tudelft.followbot.calibration.AccelerometerCalibration;
 import nl.tudelft.followbot.camera.CameraEstimator;
 import nl.tudelft.followbot.data.DataStack;
@@ -11,7 +12,6 @@ import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
 import nl.tudelft.followbot.sensors.Accelerometer;
-import nl.tudelft.followbot.sensors.Bluetooth;
 import nl.tudelft.followbot.sensors.SensorSink;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
 	private final CameraEstimator cameraEstimation = new CameraEstimator();
 
 	private Accelerometer accel;
-	private Bluetooth bt;
+	private Bluetooth bluetooth;
 
 	private FeatureVector standFeature;
 	private FeatureVector walkFeature;
@@ -93,8 +93,8 @@ public class MainActivity extends Activity {
 				360);
 
 		// bluetooth
-		bt = new Bluetooth(this);
-		bt.create();
+		bluetooth = new Bluetooth(this);
+		bluetooth.create();
 	}
 
 	@Override
@@ -123,8 +123,10 @@ public class MainActivity extends Activity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+
 		cameraEstimation.disableCamera();
-		bt.destroy();
+
+		bluetooth.destroy();
 	}
 
 	@Override
