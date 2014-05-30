@@ -10,31 +10,61 @@ public class OrientationCalculator extends Observable implements SensorSink {
 
 	float[] mGravity;
 	float[] mGeomagnetic;
-	float azimut;
+
+	float orientation[] = new float[3];
+
+	private final Accelerometer accel;
+	private final Compass compass;
+
+	public OrientationCalculator(SensorManager sm) {
+		accel = new Accelerometer(sm);
+		compass = new Compass(sm);
+
+		accel.addListener(this);
+		compass.addListener(this);
+	}
+
+	public void resume() {
+		accel.resume();
+		compass.resume();
+	}
+
+	public void pause() {
+		accel.pause();
+		compass.pause();
+	}
 
 	@Override
 	public void push(SensorEvent event) {
-		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 			mGravity = event.values;
-		if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+		} else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
 			mGeomagnetic = event.values;
+		}
+
 		if (mGravity != null && mGeomagnetic != null) {
 			float R[] = new float[9];
 			float I[] = new float[9];
 			boolean success = SensorManager.getRotationMatrix(R, I, mGravity,
 					mGeomagnetic);
 			if (success) {
-				float orientation[] = new float[3];
 				SensorManager.getOrientation(R, orientation);
-				azimut = orientation[0]; // orientation contains:
-											// azimut, pitch and roll
+
 				setChanged();
 				notifyObservers();
 			}
 		}
 	}
 
-	public float getAzimut() {
-		return azimut;
+	public float getYaw() {
+		return orientation[0];
+	}
+
+	public float getRoll() {
+		return orientation[1];
+	}
+
+	public float getPitch() {
+		return orientation[2];
 	}
 }

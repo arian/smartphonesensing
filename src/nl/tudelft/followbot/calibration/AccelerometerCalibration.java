@@ -3,7 +3,7 @@ package nl.tudelft.followbot.calibration;
 import java.util.Observable;
 
 import nl.tudelft.followbot.data.DataStack;
-import nl.tudelft.followbot.sensors.Accelerometer;
+import nl.tudelft.followbot.sensors.LinearAccelerometer;
 import nl.tudelft.followbot.sensors.SensorSink;
 import android.hardware.SensorEvent;
 import android.os.Handler;
@@ -46,13 +46,13 @@ public class AccelerometerCalibration extends Observable {
 
 	private final Button button;
 
-	private final Accelerometer sensor;
+	private final LinearAccelerometer sensor;
 
 	private final int timeToRun;
 
 	private boolean running = false;
 
-	public AccelerometerCalibration(Accelerometer snsr, int time, Button btn) {
+	public AccelerometerCalibration(LinearAccelerometer snsr, int time, Button btn) {
 		sensor = snsr;
 		timeToRun = time;
 		button = btn;

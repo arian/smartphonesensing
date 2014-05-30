@@ -10,8 +10,7 @@ import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
-import nl.tudelft.followbot.sensors.Accelerometer;
-import nl.tudelft.followbot.sensors.Compass;
+import nl.tudelft.followbot.sensors.LinearAccelerometer;
 import nl.tudelft.followbot.sensors.OrientationCalculator;
 import nl.tudelft.followbot.sensors.SensorSink;
 
@@ -39,8 +38,8 @@ public class MainActivity extends Activity {
 
 	private final CameraEstimator cameraEstimation = new CameraEstimator();
 
-	private Accelerometer accel;
-	private Compass compass;
+	private LinearAccelerometer accel;
+	private OrientationCalculator orienCalc;
 
 	private FeatureVector standFeature;
 	private FeatureVector walkFeature;
@@ -79,11 +78,7 @@ public class MainActivity extends Activity {
 
 		SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-		OrientationCalculator orienCalc = new OrientationCalculator();
-
-		accel = new Accelerometer(sm);
-		compass = new Compass(sm);
-
+		accel = new LinearAccelerometer(sm);
 		accel.addListener(new SensorSink() {
 			@Override
 			public void push(SensorEvent event) {
@@ -92,14 +87,11 @@ public class MainActivity extends Activity {
 			}
 		});
 
-		accel.addListener(orienCalc);
-		compass.addListener(orienCalc);
-
+		orienCalc = new OrientationCalculator(sm);
 		orienCalc.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				Log.d("FOO",
-						"" + ((OrientationCalculator) observable).getAzimut());
+				Log.d("FOO", "" + ((OrientationCalculator) observable).getYaw());
 			}
 		});
 
@@ -118,6 +110,9 @@ public class MainActivity extends Activity {
 		if (accel != null) {
 			accel.pause();
 		}
+		if (orienCalc != null) {
+			orienCalc.pause();
+		}
 	}
 
 	@Override
@@ -129,6 +124,9 @@ public class MainActivity extends Activity {
 
 		if (accel != null) {
 			accel.resume();
+		}
+		if (orienCalc != null) {
+			orienCalc.resume();
 		}
 	}
 
@@ -207,4 +205,5 @@ public class MainActivity extends Activity {
 		KNNClass klass = knn.classify(feature, 1);
 		Log.d(TAG, klass.getName());
 	}
+
 }

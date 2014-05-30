@@ -10,7 +10,7 @@ public class Accelerometer extends Sensor {
 
 	@Override
 	protected int getSensorType() {
-		return android.hardware.Sensor.TYPE_LINEAR_ACCELERATION;
+		return android.hardware.Sensor.TYPE_ACCELEROMETER;
 	}
 
 }
