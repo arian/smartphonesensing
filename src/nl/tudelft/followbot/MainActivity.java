@@ -11,6 +11,7 @@ import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
 import nl.tudelft.followbot.sensors.Accelerometer;
+import nl.tudelft.followbot.sensors.Bluetooth;
 import nl.tudelft.followbot.sensors.SensorSink;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -38,6 +39,7 @@ public class MainActivity extends Activity {
 	private final CameraEstimator cameraEstimation = new CameraEstimator();
 
 	private Accelerometer accel;
+	private Bluetooth bt;
 
 	private FeatureVector standFeature;
 	private FeatureVector walkFeature;
@@ -89,6 +91,10 @@ public class MainActivity extends Activity {
 		cameraEstimation.openCameraView(
 				(CameraBridgeViewBase) findViewById(R.id.surface_view), 480,
 				360);
+
+		// bluetooth
+		bt = new Bluetooth(this);
+		bt.create();
 	}
 
 	@Override
@@ -118,6 +124,7 @@ public class MainActivity extends Activity {
 	public void onDestroy() {
 		super.onDestroy();
 		cameraEstimation.disableCamera();
+		bt.destroy();
 	}
 
 	@Override
