@@ -11,6 +11,8 @@ import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
 import nl.tudelft.followbot.sensors.Accelerometer;
+import nl.tudelft.followbot.sensors.Compass;
+import nl.tudelft.followbot.sensors.OrientationCalculator;
 import nl.tudelft.followbot.sensors.SensorSink;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -38,6 +40,7 @@ public class MainActivity extends Activity {
 	private final CameraEstimator cameraEstimation = new CameraEstimator();
 
 	private Accelerometer accel;
+	private Compass compass;
 
 	private FeatureVector standFeature;
 	private FeatureVector walkFeature;
@@ -74,14 +77,29 @@ public class MainActivity extends Activity {
 
 		setContentView(R.layout.activity_main);
 
-		accel = new Accelerometer(
-				(SensorManager) getSystemService(Context.SENSOR_SERVICE));
+		SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+		OrientationCalculator orienCalc = new OrientationCalculator();
+
+		accel = new Accelerometer(sm);
+		compass = new Compass(sm);
 
 		accel.addListener(new SensorSink() {
 			@Override
 			public void push(SensorEvent event) {
 				accelStack.push(new float[] { event.timestamp, event.values[0],
 						event.values[1], event.values[2] });
+			}
+		});
+
+		accel.addListener(orienCalc);
+		compass.addListener(orienCalc);
+
+		orienCalc.addObserver(new Observer() {
+			@Override
+			public void update(Observable observable, Object data) {
+				Log.d("FOO",
+						"" + ((OrientationCalculator) observable).getAzimut());
 			}
 		});
 
