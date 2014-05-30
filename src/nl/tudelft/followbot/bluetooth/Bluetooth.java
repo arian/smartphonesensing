@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
+import android.widget.Toast;
 
 public class Bluetooth {
 
@@ -27,21 +28,26 @@ public class Bluetooth {
 				BluetoothDevice device = intent
 						.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-				int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,
-						Short.MIN_VALUE);
-				Log.d("BLUETOOTH", "  RSSI: " + rssi + "dBm" + " Device: "
-						+ device.getName());
-
 				// If it's paired, get RSSI and restart discovery
 				if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-					Log.d("BLUETOOTH", "Device paired");
+					int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,
+							Short.MIN_VALUE);
+					Log.d("BLUETOOTH", " RSSI: " + rssi + "dBm" + " Distance: "
+							+ getRSSIDistance(rssi) + "m" + " Device: "
+							+ device.getName());
+
+					Toast.makeText(
+							activity.getApplicationContext(),
+							"RSSI: " + rssi + "dBm" + "\nDistance: "
+									+ getRSSIDistance(rssi) + "m",
+							Toast.LENGTH_SHORT).show();
 
 					// restart discovery
 					startBluetoothDiscovery();
-				} else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED
-						.equals(action)) {
-					startBluetoothDiscovery();
 				}
+			} else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED
+					.equals(action)) {
+				startBluetoothDiscovery();
 			}
 		}
 	};
@@ -88,4 +94,7 @@ public class Bluetooth {
 		}
 	}
 
+	public double getRSSIDistance(int rssi) {
+		return Math.pow(10.0, (-44.0 - rssi) / 20.0);
+	}
 }
