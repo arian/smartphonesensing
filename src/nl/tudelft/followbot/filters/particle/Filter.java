@@ -66,7 +66,6 @@ public class Filter {
 			for (int j = 0; j < N; j++) {
 				Particle p = particles.get(j);
 				sum += p.getWeight();
-
 				if (sum > x) {
 					Particle newParticle = p.clone();
 					newParticle.setWeight(newWeight);
@@ -247,20 +246,12 @@ public class Filter {
 	}
 
 	static public void main(String[] argv) {
-		Filter filter = new Filter(2000, 10);
-		for (int j = 0; j < 10; j++) {
-			double x = 4 + Math.random();
-			double y = 4 + Math.random();
-
-			Particles close = filter.getParticles().getParticlesAt(x, y, 100);
-			for (int i = 0; i < close.size(); i++) {
-				close.get(i).setWeight(1 / close.get(i).distanceToSquare(x, y));
-			}
-		}
+		Filter filter = new Filter(2000, 15);
+		filter.distanceMeasurement(5.0, 1.0);
+		filter.move(15, Math.PI / 4, 5);
 		filter.getParticles().normalizeWeights();
 		filter.plot();
 		filter.resample();
 		filter.plot();
 	}
-
 }
