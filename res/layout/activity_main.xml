@@ -5,7 +5,7 @@
         android:orientation="horizontal">
 
     <RelativeLayout
-        android:layout_width="400dp"
+        android:layout_width="300dp"
         android:layout_height="match_parent" >
 
         <org.opencv.android.JavaCameraView
@@ -19,28 +19,42 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-
+<!--
         <Button
             android:id="@+id/btn_cal_stand"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="30dip"
+            android:onClick="onClickCalStand"
             android:text="@+string/btn_cal_stand"
-            android:onClick="onClickCalStand" />
+            android:textSize="@dimen/small" />
 
         <Button
             android:id="@+id/btn_cal_walk"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="30dip"
+            android:onClick="onClickCalWalk"
             android:text="@+string/btn_cal_walk"
-            android:onClick="onClickCalWalk" />
-
+            android:textSize="@dimen/small" />
+-->
         <Button
             android:id="@+id/btn_detect_activity"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="30dip"
+            android:onClick="onClickDetectActivity"
             android:text="@+string/btn_detect_activity"
-            android:onClick="onClickDetectActivity" />
+            android:textSize="@dimen/small" />
 
-        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/chart"
+            android:layout_width="fill_parent"
+            android:layout_height="0dip"
+            android:layout_weight="1"
+            android:background="#FFF"
+            android:orientation="horizontal" />
+
+    </LinearLayout>
 
 </LinearLayout>
