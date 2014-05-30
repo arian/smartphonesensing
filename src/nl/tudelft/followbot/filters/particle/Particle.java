@@ -62,6 +62,10 @@ public class Particle {
 		return dx * dx + dy * dy;
 	}
 
+	public double distanceToOrigin() {
+		return Math.sqrt(distanceToSquare(0, 0));
+	}
+
 	@Override
 	public Particle clone() {
 		Particle clone = new Particle(x, y);
