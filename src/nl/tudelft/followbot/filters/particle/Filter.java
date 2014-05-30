@@ -46,7 +46,6 @@ public class Filter {
 			Particle ppost = particles.get(i);
 			Particle pprior = prior.getParticleAt(ppost.getX(), ppost.getY());
 
-			// System.out.println(pprior.getWeight());
 			ppost.setWeight(ppost.getWeight() * pprior.getWeight());
 		}
 	}
@@ -232,13 +231,14 @@ public class Filter {
 		return x;
 	}
 
-	public void plot() {
+	public void plot(String title) {
 		double[][] x = getPositions();
 
 		Plot3DPanel plot = new Plot3DPanel();
 		plot.addScatterPlot("particles", x);
 
 		JFrame frame = new JFrame();
+		frame.setTitle(title);
 		frame.setSize(800, 800);
 		frame.setContentPane(plot);
 		frame.setVisible(true);
@@ -246,12 +246,34 @@ public class Filter {
 	}
 
 	static public void main(String[] argv) {
-		Filter filter = new Filter(2000, 15);
-		filter.distanceMeasurement(5.0, 1.0);
-		filter.move(15, Math.PI / 4, 5);
-		filter.getParticles().normalizeWeights();
-		filter.plot();
+		Filter filter = new Filter(2000, 25);
+
+		filter.distanceMeasurement(5.0, 2.0);
+		filter.plot("Initial measurement");
+
+		Particles prior = filter.getParticles();
+
 		filter.resample();
-		filter.plot();
+		filter.plot("after resampling");
+
+		filter.move(-5, 0, 2);
+		filter.plot("after moving");
+
+		filter.distanceMeasurement(0.5, 1);
+		filter.plot("new distance measurement");
+
+		filter.multiplyPrior(prior);
+		filter.plot("after multiplying with prior");
+
+		Particles prior2 = filter.getParticles();
+		filter.resample();
+		filter.plot("second resampling");
+
+		filter.move(-1, 0, 2);
+		filter.plot("after second moving");
+
+		filter.distanceMeasurement(2, 1);
+		filter.plot("new distance measurement");
+
 	}
 }
