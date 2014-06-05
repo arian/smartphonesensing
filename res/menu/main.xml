@@ -1,9 +1,33 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/action_preview_rgba"
         android:orderInCategory="100"
         android:showAsAction="never"
-        android:title="@string/action_settings"/>
+        android:title="@string/action_preview_rgba"/>
+
+    <item
+        android:id="@+id/action_detection_threshold"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/action_detection_threshold"/>
+
+    <item
+        android:id="@+id/action_detection_rgba"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/action_detection_rgba"/>
+
+    <item
+        android:id="@+id/action_cal_stand"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/action_cal_stand"/>
+
+    <item
+        android:id="@+id/action_cal_walk"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/action_cal_walk"/>
 
 </menu>

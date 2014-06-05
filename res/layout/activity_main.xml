@@ -19,25 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-<!--
-        <Button
-            android:id="@+id/btn_cal_stand"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="30dip"
-            android:onClick="onClickCalStand"
-            android:text="@+string/btn_cal_stand"
-            android:textSize="@dimen/small" />
 
-        <Button
-            android:id="@+id/btn_cal_walk"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="30dip"
-            android:onClick="onClickCalWalk"
-            android:text="@+string/btn_cal_walk"
-            android:textSize="@dimen/small" />
--->
         <Button
             android:id="@+id/btn_detect_activity"
             android:layout_width="match_parent"
@@ -46,6 +28,11 @@
             android:onClick="onClickDetectActivity"
             android:text="@+string/btn_detect_activity"
             android:textSize="@dimen/small" />
+
+        <TextView
+            android:id="@+id/activity_output"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <LinearLayout
             android:id="@+id/chart"

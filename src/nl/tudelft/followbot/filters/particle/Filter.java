@@ -3,10 +3,6 @@ package nl.tudelft.followbot.filters.particle;
 import static nl.tudelft.followbot.math.NormalDistribution.getDensity;
 import static nl.tudelft.followbot.math.NormalDistribution.getQuantile;
 
-import javax.swing.JFrame;
-
-import org.math.plot.Plot3DPanel;
-
 public class Filter {
 
 	private Particles particles = new Particles();
@@ -118,48 +114,49 @@ public class Filter {
 	}
 
 	public void plot(String title) {
-		double[][] x = getPositions();
+		// double[][] x = getPositions();
 
-		Plot3DPanel plot = new Plot3DPanel();
-		plot.addScatterPlot("particles", x);
+		// Plot3DPanel plot = new Plot3DPanel();
+		// plot.addScatterPlot("particles", x);
 
-		JFrame frame = new JFrame();
-		frame.setTitle(title);
-		frame.setSize(800, 800);
-		frame.setContentPane(plot);
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		// JFrame frame = new JFrame();
+		// frame.setTitle(title);
+		// frame.setSize(800, 800);
+		// frame.setContentPane(plot);
+		// frame.setVisible(true);
+		// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 
-	static public void main(String[] argv) {
-		Filter filter = new Filter(2000, 25);
+	// static public void main(String[] argv) {
+	// Filter filter = new Filter(2000, 25);
+	//
+	// filter.distanceMeasurement(5.0, 2.0);
+	// filter.plot("Initial measurement");
+	//
+	// Particles prior = filter.getParticles();
+	//
+	// filter.resample();
+	// filter.plot("after resampling");
+	//
+	// filter.move(-5, 0, 2);
+	// filter.plot("after moving");
+	//
+	// filter.distanceMeasurement(0.5, 1);
+	// filter.plot("new distance measurement");
+	//
+	// filter.multiplyPrior(prior);
+	// filter.plot("after multiplying with prior");
+	//
+	// Particles prior2 = filter.getParticles();
+	// filter.resample();
+	// filter.plot("second resampling");
+	//
+	// filter.move(-1, 0, 2);
+	// filter.plot("after second moving");
+	//
+	// filter.distanceMeasurement(2, 1);
+	// filter.plot("new distance measurement");
+	//
+	// }
 
-		filter.distanceMeasurement(5.0, 2.0);
-		filter.plot("Initial measurement");
-
-		Particles prior = filter.getParticles();
-
-		filter.resample();
-		filter.plot("after resampling");
-
-		filter.move(-5, 0, 2);
-		filter.plot("after moving");
-
-		filter.distanceMeasurement(0.5, 1);
-		filter.plot("new distance measurement");
-
-		filter.multiplyPrior(prior);
-		filter.plot("after multiplying with prior");
-
-		Particles prior2 = filter.getParticles();
-		filter.resample();
-		filter.plot("second resampling");
-
-		filter.move(-1, 0, 2);
-		filter.plot("after second moving");
-
-		filter.distanceMeasurement(2, 1);
-		filter.plot("new distance measurement");
-
-	}
 }
