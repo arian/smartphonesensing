@@ -14,6 +14,12 @@ import nl.tudelft.followbot.sensors.LinearAccelerometer;
 import nl.tudelft.followbot.sensors.OrientationCalculator;
 import nl.tudelft.followbot.sensors.SensorSink;
 
+import org.achartengine.ChartFactory;
+import org.achartengine.GraphicalView;
+import org.achartengine.model.XYMultipleSeriesDataset;
+import org.achartengine.model.XYSeries;
+import org.achartengine.renderer.XYMultipleSeriesRenderer;
+import org.achartengine.renderer.XYSeriesRenderer;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
@@ -21,6 +27,7 @@ import org.opencv.android.OpenCVLoader;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -29,12 +36,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
+import android.widget.LinearLayout;
 
 public class MainActivity extends Activity {
+
 	private MenuItem mItemPreviewRGBA;
 	private MenuItem mItemPreviewThresh;
 	private MenuItem mItemPreviewOdRGBA;
+	private MenuItem mItemCalStand;
+	private MenuItem mItemCalWalk;
 
 	private final CameraEstimator cameraEstimation = new CameraEstimator();
 
@@ -99,6 +109,31 @@ public class MainActivity extends Activity {
 		cameraEstimation.openCameraView(
 				(CameraBridgeViewBase) findViewById(R.id.surface_view), 480,
 				360);
+
+		XYSeries mSeries = new XYSeries("");
+		XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
+		mRenderer.setBackgroundColor(Color.WHITE);
+
+		XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
+		mDataset.addSeries(mSeries);
+
+		for (int x = 0; x < 100; x++) {
+			mSeries.add(x, Math.random() * x);
+		}
+
+		XYSeriesRenderer renderer = new XYSeriesRenderer();
+		renderer.setColor(Color.BLACK);
+		renderer.setPointStrokeWidth(10);
+		mRenderer.addSeriesRenderer(renderer);
+
+		GraphicalView gView = ChartFactory.getScatterChartView(this, mDataset,
+				mRenderer);
+
+		gView.setBackgroundColor(Color.WHITE);
+
+		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
+		layout.addView(gView);
+
 	}
 
 	@Override
@@ -145,6 +180,9 @@ public class MainActivity extends Activity {
 		mItemPreviewThresh = menu.add("Object Detection Threshold");
 		mItemPreviewOdRGBA = menu.add("Object Detection RGBA");
 
+		mItemCalStand = menu.add("Calibrate Stand");
+		mItemCalWalk = menu.add("Calibrate Walk");
+
 		return true;
 	}
 
@@ -158,16 +196,19 @@ public class MainActivity extends Activity {
 			cameraEstimation.setViewMode(CameraEstimator.VIEW_MODE_THRESH);
 		} else if (item == mItemPreviewOdRGBA) {
 			cameraEstimation.setViewMode(CameraEstimator.VIEW_MODE_OD_RGBA);
+		} else if (item == mItemCalStand) {
+			onClickCalStand();
+		} else if (item == mItemCalWalk) {
+			onClickCalWalk();
 		}
 
 		return true;
 	}
 
-	public void onClickCalStand(View view) {
-		Button btn = (Button) view;
+	private void onClickCalStand() {
 		final int calibrationTime = 4;
 		final AccelerometerCalibration cal = new AccelerometerCalibration(
-				accel, calibrationTime, btn);
+				accel, calibrationTime);
 
 		cal.addObserver(new Observer() {
 			@Override
@@ -181,11 +222,10 @@ public class MainActivity extends Activity {
 		cal.start();
 	}
 
-	public void onClickCalWalk(View view) {
-		Button btn = (Button) view;
+	private void onClickCalWalk() {
 		final int calibrationTime = 10;
 		final AccelerometerCalibration cal = new AccelerometerCalibration(
-				accel, calibrationTime, btn);
+				accel, calibrationTime);
 
 		cal.addObserver(new Observer() {
 			@Override

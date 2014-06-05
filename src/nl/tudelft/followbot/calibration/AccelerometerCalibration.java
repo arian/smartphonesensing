@@ -8,7 +8,6 @@ import nl.tudelft.followbot.sensors.SensorSink;
 import android.hardware.SensorEvent;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Button;
 
 public class AccelerometerCalibration extends Observable {
 
@@ -22,7 +21,7 @@ public class AccelerometerCalibration extends Observable {
 		public void run() {
 			long millis = System.currentTimeMillis() - startTime;
 			int seconds = (int) (millis / 1000);
-			button.setText(String.format("%d", timeToRun - seconds));
+			// button.setText(String.format("%d", timeToRun - seconds));
 			if (seconds < timeToRun) {
 				timerHandler.postDelayed(this, 500);
 			} else {
@@ -42,9 +41,9 @@ public class AccelerometerCalibration extends Observable {
 
 	private long startTime;
 
-	private CharSequence buttonText;
+	// private CharSequence buttonText;
 
-	private final Button button;
+	// private final Button button;
 
 	private final LinearAccelerometer sensor;
 
@@ -52,17 +51,17 @@ public class AccelerometerCalibration extends Observable {
 
 	private boolean running = false;
 
-	public AccelerometerCalibration(LinearAccelerometer snsr, int time, Button btn) {
+	public AccelerometerCalibration(LinearAccelerometer snsr, int time) {
 		sensor = snsr;
 		timeToRun = time;
-		button = btn;
+		// button = btn;
 	}
 
 	public void start() {
 		if (running) {
 			return;
 		}
-		buttonText = button.getText();
+		// buttonText = button.getText();
 		startTime = System.currentTimeMillis();
 		timerHandler.postDelayed(timerRunnable, 0);
 		sensor.addListener(sensorListener);
@@ -74,7 +73,7 @@ public class AccelerometerCalibration extends Observable {
 			return;
 		}
 		timerHandler.removeCallbacks(timerRunnable);
-		button.setText(buttonText);
+		// button.setText(buttonText);
 		sensor.removeListener(sensorListener);
 		Log.d("Calibration", data.getSize() + "");
 		setChanged();
