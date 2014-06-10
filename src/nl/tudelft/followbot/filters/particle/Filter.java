@@ -3,10 +3,6 @@ package nl.tudelft.followbot.filters.particle;
 import static nl.tudelft.followbot.math.NormalDistribution.getDensity;
 import static nl.tudelft.followbot.math.NormalDistribution.getQuantile;
 
-import javax.swing.JFrame;
-
-import org.math.plot.Plot3DPanel;
-
 public class Filter {
 
 	private Particles particles = new Particles();
@@ -195,17 +191,17 @@ public class Filter {
 	}
 
 	public void plot(String title) {
-		double[][] x = getPositions();
+		// double[][] x = getPositions();
 
-		Plot3DPanel plot = new Plot3DPanel();
-		plot.addScatterPlot("particles", x);
+		// Plot3DPanel plot = new Plot3DPanel();
+		// plot.addScatterPlot("particles", x);
 
-		JFrame frame = new JFrame();
-		frame.setTitle(title);
-		frame.setSize(800, 800);
-		frame.setContentPane(plot);
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		// JFrame frame = new JFrame();
+		// frame.setTitle(title);
+		// frame.setSize(800, 800);
+		// frame.setContentPane(plot);
+		// frame.setVisible(true);
+		// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 
 	static public void main(String[] argv) {

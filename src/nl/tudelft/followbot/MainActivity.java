@@ -13,6 +13,7 @@ import nl.tudelft.followbot.knn.KNNClass;
 import nl.tudelft.followbot.sensors.LinearAccelerometer;
 import nl.tudelft.followbot.sensors.OrientationCalculator;
 import nl.tudelft.followbot.sensors.SensorSink;
+import nl.tudelft.followbot.timer.Periodical;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
@@ -37,29 +38,30 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-	private MenuItem mItemPreviewRGBA;
-	private MenuItem mItemPreviewThresh;
-	private MenuItem mItemPreviewOdRGBA;
-	private MenuItem mItemCalStand;
-	private MenuItem mItemCalWalk;
+	private final String TAG = "FollowBot";
 
 	private final CameraEstimator cameraEstimation = new CameraEstimator();
+
+	private final DataStack<float[]> accelStack = new DataStack<float[]>(512);
 
 	private LinearAccelerometer accel;
 	private OrientationCalculator orienCalc;
 
-	private FeatureVector standFeature;
-	private FeatureVector walkFeature;
 	private final KNNClass standClass = new KNNClass("stand");
 	private final KNNClass walkClass = new KNNClass("walk");
 	private final KNN knn = new KNN();
 
-	private final String TAG = "FollowBot";
-
-	private final DataStack<float[]> accelStack = new DataStack<float[]>(512);
+	private final Periodical measurePeriodical = new Periodical() {
+		@Override
+		public void run(long millis) {
+			detectActivity();
+		}
+	};
 
 	private final BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(
 			this) {
@@ -101,7 +103,8 @@ public class MainActivity extends Activity {
 		orienCalc.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				Log.d("FOO", "" + ((OrientationCalculator) observable).getYaw());
+				// Log.d("FOO", "" + ((OrientationCalculator)
+				// observable).getYaw());
 			}
 		});
 
@@ -137,20 +140,6 @@ public class MainActivity extends Activity {
 	}
 
 	@Override
-	protected void onPause() {
-		super.onPause();
-
-		cameraEstimation.disableCamera();
-
-		if (accel != null) {
-			accel.pause();
-		}
-		if (orienCalc != null) {
-			orienCalc.pause();
-		}
-	}
-
-	@Override
 	protected void onResume() {
 		super.onResume();
 
@@ -163,87 +152,93 @@ public class MainActivity extends Activity {
 		if (orienCalc != null) {
 			orienCalc.resume();
 		}
+
+		measurePeriodical.start(500);
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+
+		cameraEstimation.disableCamera();
+
+		if (accel != null) {
+			accel.pause();
+		}
+		if (orienCalc != null) {
+			orienCalc.pause();
+		}
+
+		measurePeriodical.end();
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
 		cameraEstimation.disableCamera();
+		measurePeriodical.end();
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
-
-		mItemPreviewRGBA = menu.add("Preview RGBA");
-		mItemPreviewThresh = menu.add("Object Detection Threshold");
-		mItemPreviewOdRGBA = menu.add("Object Detection RGBA");
-
-		mItemCalStand = menu.add("Calibrate Stand");
-		mItemCalWalk = menu.add("Calibrate Walk");
-
 		return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		Log.i(TAG, "called onOptionsItemSelected; selected item: " + item);
-
-		if (item == mItemPreviewRGBA) {
+		switch (item.getItemId()) {
+		case R.id.action_preview_rgba:
 			cameraEstimation.setViewMode(CameraEstimator.VIEW_MODE_RGBA);
-		} else if (item == mItemPreviewThresh) {
+			break;
+		case R.id.action_detection_threshold:
 			cameraEstimation.setViewMode(CameraEstimator.VIEW_MODE_THRESH);
-		} else if (item == mItemPreviewOdRGBA) {
+			break;
+		case R.id.action_detection_rgba:
 			cameraEstimation.setViewMode(CameraEstimator.VIEW_MODE_OD_RGBA);
-		} else if (item == mItemCalStand) {
-			onClickCalStand();
-		} else if (item == mItemCalWalk) {
-			onClickCalWalk();
+			break;
+		case R.id.action_cal_stand:
+			onClickCalibrate(standClass,
+					getString(R.string.toast_stand_finished));
+			break;
+		case R.id.action_cal_walk:
+			onClickCalibrate(walkClass, getString(R.string.toast_walk_finished));
+			break;
 		}
-
 		return true;
 	}
 
-	private void onClickCalStand() {
+	private void onClickCalibrate(final KNNClass klass, final CharSequence msg) {
 		final int calibrationTime = 4;
 		final AccelerometerCalibration cal = new AccelerometerCalibration(
 				accel, calibrationTime);
+		final Context context = getApplicationContext();
 
 		cal.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				standFeature = new FeatureVector(standClass, FeatureExtractor
-						.extractFeaturesFromFloat4(cal.getData()));
-				knn.add(standFeature);
+				DataStack<float[]> ds = cal.getData();
+				float[] d = FeatureExtractor.extractFeaturesFromFloat4(ds);
+				FeatureVector feature = new FeatureVector(klass, d);
+				knn.add(feature);
+				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
 			}
 		});
-
-		cal.start();
-	}
-
-	private void onClickCalWalk() {
-		final int calibrationTime = 10;
-		final AccelerometerCalibration cal = new AccelerometerCalibration(
-				accel, calibrationTime);
-
-		cal.addObserver(new Observer() {
-			@Override
-			public void update(Observable observable, Object data) {
-				walkFeature = new FeatureVector(walkClass, FeatureExtractor
-						.extractFeaturesFromFloat4(cal.getData()));
-				knn.add(walkFeature);
-			}
-		});
-
 		cal.start();
 	}
 
 	public void onClickDetectActivity(View view) {
+		detectActivity();
+	}
+
+	public void detectActivity() {
 		FeatureVector feature = new FeatureVector(null,
 				FeatureExtractor.extractFeaturesFromFloat4(accelStack));
 		KNNClass klass = knn.classify(feature, 1);
-		Log.d(TAG, klass.getName());
+		if (klass != null) { // if there was no calibration before
+			Log.d(TAG, klass.getName());
+			TextView tv = (TextView) findViewById(R.id.activity_output);
+			tv.setText(klass.getName());
+		}
 	}
-
 }
