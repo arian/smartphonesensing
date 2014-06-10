@@ -22,9 +22,10 @@ public class Particle {
 	 */
 	private double a = 0;
 
-	public Particle(double x, double y) {
+	public Particle(double x, double y, double orientation) {
 		setX(x);
 		setY(y);
+		setOrientation(orientation);
 	}
 
 	public double getWeight() {
@@ -52,6 +53,10 @@ public class Particle {
 		return y;
 	}
 
+	public void setOrientation(double orientation) {
+		a = orientation;
+	}
+
 	public double getOrientation() {
 		return a;
 	}
@@ -68,8 +73,7 @@ public class Particle {
 
 	@Override
 	public Particle clone() {
-		Particle clone = new Particle(x, y);
-		clone.a = a;
+		Particle clone = new Particle(x, y, a);
 		return clone;
 	}
 

@@ -19,8 +19,11 @@ public class Filter {
 	private void fillInitialParticles(int N, double radius) {
 		for (int i = 0; i < N; i++) {
 			double r = radius * Math.random();
-			double a = 2 * Math.PI * Math.random();
-			Particle p = new Particle(r * Math.cos(a), r * Math.sin(a));
+			double a = Math.PI / 2 * Math.random();
+			double orientation = Math.PI * (2 * Math.random() - 1);
+
+			Particle p = new Particle(r * Math.cos(a), r * Math.sin(a),
+					orientation);
 			p.setWeight(1.0 / N);
 			particles.add(p);
 		}
@@ -74,46 +77,120 @@ public class Filter {
 	}
 
 	/**
-	 * Distance Measurement, for example from the Bluetooth RSS
+	 * Distance Measurement from the phone camera or estimated from the activity
+	 * monitoring
 	 * 
-	 * @param d
+	 * @param distance
 	 * @param sigma
 	 */
-	public void distanceMeasurement(double d, double sigma) {
+	public void distanceMeasurement(double distance, double sigma) {
 		for (int i = 0; i < particles.size(); i++) {
 			Particle p = particles.get(i);
 			double x = p.distanceToOrigin();
-			double w = getDensity(d, sigma, x);
+			double w = getDensity(distance, sigma, x);
 			p.setWeight(w);
 		}
 	}
 
 	/**
-	 * Move d in direction alpha, with std deviation sigma
+	 * Orientation Measurement from the phone camera or from the the orientation
+	 * sensor
+	 * 
+	 * @param orientation
+	 * @param sigma
+	 */
+	public void orientationMeasurement(double orientation, double sigma) {
+		for (int i = 0; i < particles.size(); i++) {
+			Particle p = particles.get(i);
+			double a = p.getOrientation();
+			double w = getDensity(orientation, sigma, a);
+			p.setWeight(w);
+		}
+	}
+
+	/**
+	 * User moves d meters in direction alpha, with std deviation sigma
 	 * 
 	 * @param d
 	 * @param alpha
 	 * @param sigma
 	 */
-	public void move(double d, double alpha, double sigma) {
+	public void userMove(double d, double alpha, double sigma) {
 		// alpha = 0 means moving forward -> increasing all y with d
 		alpha += Math.PI / 2;
+
 		for (int i = 0; i < particles.size(); i++) {
 			Particle p = particles.get(i);
 			double dist = getQuantile(d, sigma, Math.random());
-			p.setX(p.getX() + Math.cos(alpha) * dist);
-			p.setY(p.getY() + Math.sin(alpha) * dist);
+
+			double oldX = p.getX();
+			double oldY = p.getY();
+
+			double newX = oldX + Math.cos(alpha) * dist;
+			double newY = oldY + Math.sin(alpha) * dist;
+
+			double newOrientation = p.getOrientation()
+					+ Math.acos((oldX * newX + oldY * newY)
+							/ (Math.sqrt(oldX * oldX + oldY * oldY) * Math
+									.sqrt(newX * newX + newY * newY)));
+
+			p.setX(newX);
+			p.setY(newY);
+			p.setOrientation(newOrientation);
 		}
+	}
+
+	/**
+	 * Robot moves d meters along its direction, with std deviation sigma
+	 * 
+	 * @param d
+	 * @param sigma
+	 * 
+	 *            TODO: Add actual robot movement through IOIO
+	 */
+	public void robotMove(double d, double sigma) {
+		for (int i = 0; i < particles.size(); i++) {
+			Particle p = particles.get(i);
+
+			double dist = getQuantile(d, sigma, Math.random());
+
+			p.setX(p.getX() + Math.cos(p.getOrientation()) * dist);
+			p.setY(p.getY() + Math.sin(p.getOrientation()) * dist);
+		}
+
+		// IOIO code
+	}
+
+	/**
+	 * Robot rotates with angle alpha [rad], with std deviation sigma
+	 * 
+	 * @param d
+	 * @param sigma
+	 * 
+	 *            TODO: Add actual robot movement through IOIO
+	 */
+	public void robotRotate(double alpha, double sigma) {
+		for (int i = 0; i < particles.size(); i++) {
+			Particle p = particles.get(i);
+
+			double dist = getQuantile(alpha, sigma, Math.random());
+
+			p.setOrientation(p.getOrientation() + alpha);
+		}
+
+		// IOIO code
 	}
 
 	public double[][] getPositions() {
 		double[][] x = new double[3][particles.size()];
+
 		for (int i = 0; i < particles.size(); i++) {
 			Particle p = particles.get(i);
 			x[0][i] = p.getX();
 			x[1][i] = p.getY();
 			x[2][i] = p.getWeight();
 		}
+
 		return x;
 	}
 
@@ -132,9 +209,9 @@ public class Filter {
 	}
 
 	static public void main(String[] argv) {
-		Filter filter = new Filter(2000, 25);
+		Filter filter = new Filter(10000, 50);
 
-		filter.distanceMeasurement(5.0, 2.0);
+		filter.distanceMeasurement(20.0, 4.0);
 		filter.plot("Initial measurement");
 
 		Particles prior = filter.getParticles();
@@ -142,24 +219,63 @@ public class Filter {
 		filter.resample();
 		filter.plot("after resampling");
 
-		filter.move(-5, 0, 2);
-		filter.plot("after moving");
+		filter.orientationMeasurement(Math.PI / 3.0, 2.0);
+		filter.plot("Orientation Measurement");
 
-		filter.distanceMeasurement(0.5, 1);
+		filter.resample();
+		filter.plot("after resampling 2");
+
+		filter.robotMove(0.5, 0.2);
+		filter.distanceMeasurement(19.5, 4.0);
 		filter.plot("new distance measurement");
 
 		filter.multiplyPrior(prior);
 		filter.plot("after multiplying with prior");
 
-		Particles prior2 = filter.getParticles();
 		filter.resample();
-		filter.plot("second resampling");
+		filter.plot("after resampling 3");
 
-		filter.move(-1, 0, 2);
-		filter.plot("after second moving");
+		filter.orientationMeasurement(Math.PI / 3.0, 2.0);
+		filter.plot("new orientation measurement");
 
-		filter.distanceMeasurement(2, 1);
-		filter.plot("new distance measurement");
+		filter.resample();
+		filter.plot("after resampling 4");
 
+		/*
+		 * bla
+		 */
+		filter.robotRotate(Math.PI / 3.0, 0.2);
+		filter.distanceMeasurement(19.5, 4.0);
+		filter.plot("new distance measurement 2");
+
+		filter.multiplyPrior(prior);
+		filter.plot("after multiplying with prior2");
+
+		filter.resample();
+		filter.plot("after resampling 5");
+
+		filter.orientationMeasurement(0, 0.2);
+		filter.plot("new orientation measurement2");
+
+		filter.resample();
+		filter.plot("after resampling 6");
+
+		/*
+		 * filter.move(-5, 0, 2); filter.plot("after moving");
+		 * 
+		 * filter.distanceMeasurement(0.5, 1);
+		 * filter.plot("new distance measurement");
+		 * 
+		 * filter.multiplyPrior(prior);
+		 * filter.plot("after multiplying with prior");
+		 * 
+		 * Particles prior2 = filter.getParticles(); filter.resample();
+		 * filter.plot("second resampling");
+		 * 
+		 * filter.move(-1, 0, 2); filter.plot("after second moving");
+		 * 
+		 * filter.distanceMeasurement(2, 1);
+		 * filter.plot("new distance measurement");
+		 */
 	}
 }

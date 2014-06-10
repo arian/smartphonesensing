@@ -12,12 +12,12 @@ public class ParticlesTest {
 	@Test
 	public void testGetParticleAt() {
 		Particles ps = new Particles();
-		Particle p2 = new Particle(2, 0);
-		ps.add(new Particle(0, 0));
-		ps.add(new Particle(1, 0));
+		Particle p2 = new Particle(2, 0, 0.3);
+		ps.add(new Particle(0, 0, 0));
+		ps.add(new Particle(1, 0, 0.2));
 		ps.add(p2);
-		ps.add(new Particle(3, 0));
-		ps.add(new Particle(4, 0));
+		ps.add(new Particle(3, 0, 0));
+		ps.add(new Particle(4, 0, 1));
 		Particle p = ps.getParticleAt(2, 1);
 		assertSame(p2, p);
 	}
@@ -31,16 +31,16 @@ public class ParticlesTest {
 	@Test
 	public void testGetParticlesAt() {
 		Particles ps = new Particles();
-		Particle p1 = new Particle(1, 0);
-		Particle p2 = new Particle(2, 0);
-		Particle p3 = new Particle(3, 0);
-		ps.add(new Particle(-1, 0));
-		ps.add(new Particle(0, 0));
+		Particle p1 = new Particle(1, 0, 0);
+		Particle p2 = new Particle(2, 0, 0);
+		Particle p3 = new Particle(3, 0, 0);
+		ps.add(new Particle(-1, 0, 0));
+		ps.add(new Particle(0, 0, 0));
 		ps.add(p1);
 		ps.add(p2);
 		ps.add(p3);
-		ps.add(new Particle(4, 0));
-		ps.add(new Particle(5, 0));
+		ps.add(new Particle(4, 0, 0));
+		ps.add(new Particle(5, 0, 0));
 		Particles psAt21 = ps.getParticlesAt(2, 1, 3);
 		assertEquals(3, psAt21.size());
 		assertTrue(psAt21.contains(p1));
@@ -51,10 +51,10 @@ public class ParticlesTest {
 	@Test
 	public void testNormalizeWeights() {
 		Particles ps = new Particles();
-		Particle p1 = new Particle(1, 0);
-		Particle p2 = new Particle(2, 0);
-		Particle p3 = new Particle(3, 0);
-		Particle p4 = new Particle(3, 0);
+		Particle p1 = new Particle(1, 0, 0);
+		Particle p2 = new Particle(2, 0, 0);
+		Particle p3 = new Particle(3, 0, 0);
+		Particle p4 = new Particle(3, 0, 0);
 		ps.add(p1);
 		ps.add(p2);
 		ps.add(p3);
@@ -66,12 +66,12 @@ public class ParticlesTest {
 	@Test
 	public void testIncreaseAndNormalizeWeights() {
 		Particles ps = new Particles();
-		Particle p1 = new Particle(1, 0);
-		Particle p2 = new Particle(2, 0);
+		Particle p1 = new Particle(1, 0, 0);
+		Particle p2 = new Particle(2, 0, 0);
 		ps.add(p1);
 		ps.add(p2);
-		ps.add(new Particle(3, 0));
-		ps.add(new Particle(4, 0));
+		ps.add(new Particle(3, 0, 0));
+		ps.add(new Particle(4, 0, 0));
 		ps.normalizeWeights();
 		assertEquals(0.25, p1.getWeight(), 1e-6);
 		assertEquals(0.25, p2.getWeight(), 1e-6);
