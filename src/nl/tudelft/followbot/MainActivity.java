@@ -56,10 +56,20 @@ public class MainActivity extends Activity {
 
 	private Filter filter;
 
+	private float yaw;
+
 	private final Periodical measurePeriodical = new Periodical() {
+
+		private double pYaw = Double.MIN_VALUE;
+
 		@Override
 		public void run(long millis) {
 			detectActivity();
+			if (pYaw != Double.MIN_VALUE) {
+				double diff = pYaw - yaw;
+				filter.userRotate(diff);
+			}
+			pYaw = yaw;
 		}
 	};
 
@@ -110,8 +120,7 @@ public class MainActivity extends Activity {
 		orienCalc.addObserver(new Observer() {
 			@Override
 			public void update(Observable observable, Object data) {
-				// Log.d("FOO", "" + ((OrientationCalculator)
-				// observable).getYaw());
+				yaw = ((OrientationCalculator) observable).getYaw();
 			}
 		});
 
@@ -128,7 +137,6 @@ public class MainActivity extends Activity {
 
 		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
 		layout.addView(plotView);
-
 	}
 
 	@Override

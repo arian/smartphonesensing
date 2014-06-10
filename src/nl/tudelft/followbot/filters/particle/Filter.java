@@ -137,6 +137,22 @@ public class Filter {
 	}
 
 	/**
+	 * User rotates, so all particles rotate around the origin
+	 * 
+	 * @param rot
+	 *            difference in radians
+	 * @link http://en.wikipedia.org/wiki/Rotation_(mathematics)#Two_dimensions
+	 */
+	public void userRotate(double rot) {
+		for (Particle p : particles) {
+			double x = p.getX();
+			double y = p.getY();
+			p.setX(x * Math.cos(rot) - y * Math.sin(rot));
+			p.setY(x * Math.sin(rot) + y * Math.cos(rot));
+		}
+	}
+
+	/**
 	 * Robot moves d meters along its direction, with std deviation sigma
 	 * 
 	 * @param d
