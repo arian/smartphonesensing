@@ -7,20 +7,16 @@ import nl.tudelft.followbot.calibration.AccelerometerCalibration;
 import nl.tudelft.followbot.camera.CameraEstimator;
 import nl.tudelft.followbot.data.DataStack;
 import nl.tudelft.followbot.data.FeatureExtractor;
+import nl.tudelft.followbot.filters.particle.Filter;
 import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
+import nl.tudelft.followbot.plot.ScatterPlotView;
 import nl.tudelft.followbot.sensors.LinearAccelerometer;
 import nl.tudelft.followbot.sensors.OrientationCalculator;
 import nl.tudelft.followbot.sensors.SensorSink;
 import nl.tudelft.followbot.timer.Periodical;
 
-import org.achartengine.ChartFactory;
-import org.achartengine.GraphicalView;
-import org.achartengine.model.XYMultipleSeriesDataset;
-import org.achartengine.model.XYSeries;
-import org.achartengine.renderer.XYMultipleSeriesRenderer;
-import org.achartengine.renderer.XYSeriesRenderer;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
@@ -28,7 +24,6 @@ import org.opencv.android.OpenCVLoader;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -56,10 +51,22 @@ public class MainActivity extends Activity {
 	private final KNNClass walkClass = new KNNClass("walk");
 	private final KNN knn = new KNN();
 
+	// PlotAChartEngine plotter;
+	private ScatterPlotView plotView;
+
+	private Filter filter;
+
 	private final Periodical measurePeriodical = new Periodical() {
 		@Override
 		public void run(long millis) {
 			detectActivity();
+		}
+	};
+
+	private final Periodical plotPeriodical = new Periodical() {
+		@Override
+		public void run(long millis) {
+			plotView.plot(filter.getPositions());
 		}
 	};
 
@@ -113,29 +120,14 @@ public class MainActivity extends Activity {
 				(CameraBridgeViewBase) findViewById(R.id.surface_view), 480,
 				360);
 
-		XYSeries mSeries = new XYSeries("");
-		XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
-		mRenderer.setBackgroundColor(Color.WHITE);
+		// plotter = new PlotAChartEngine(this, );
 
-		XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
-		mDataset.addSeries(mSeries);
+		plotView = new ScatterPlotView(this);
 
-		for (int x = 0; x < 100; x++) {
-			mSeries.add(x, Math.random() * x);
-		}
-
-		XYSeriesRenderer renderer = new XYSeriesRenderer();
-		renderer.setColor(Color.BLACK);
-		renderer.setPointStrokeWidth(10);
-		mRenderer.addSeriesRenderer(renderer);
-
-		GraphicalView gView = ChartFactory.getScatterChartView(this, mDataset,
-				mRenderer);
-
-		gView.setBackgroundColor(Color.WHITE);
+		filter = new Filter(100, 25);
 
 		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
-		layout.addView(gView);
+		layout.addView(plotView);
 
 	}
 
@@ -153,7 +145,8 @@ public class MainActivity extends Activity {
 			orienCalc.resume();
 		}
 
-		measurePeriodical.start(500);
+		measurePeriodical.start(100);
+		plotPeriodical.start(100);
 	}
 
 	@Override
