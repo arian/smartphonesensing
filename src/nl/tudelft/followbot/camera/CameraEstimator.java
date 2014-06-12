@@ -42,6 +42,7 @@ public class CameraEstimator implements CvCameraViewListener2 {
 	private final int angleSkew = 0;
 	private final int translationHorizontal = 0;
 	private final int translationVertical = 0;
+	private final int robotDetected = 0;
 
 	public void enableCamera() {
 		mOpenCvCameraView.enableView();
@@ -156,6 +157,10 @@ public class CameraEstimator implements CvCameraViewListener2 {
 
 	public int getTranslationVertical() {
 		return translationVertical;
+	}
+
+	public boolean robotSeen() {
+		return (robotDetected == 1);
 	}
 
 	public native void CircleObjectTrack(int greenHmin, int greenSmin,
