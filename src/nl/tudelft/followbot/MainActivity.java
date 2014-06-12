@@ -8,6 +8,7 @@ import nl.tudelft.followbot.camera.CameraEstimator;
 import nl.tudelft.followbot.data.DataStack;
 import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.filters.particle.Filter;
+import nl.tudelft.followbot.filters.particle.Particles;
 import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
@@ -38,6 +39,10 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
+	private static final double REFERENCE_DISTANCE = 150.0;
+	private static final double DISTANCE_TOLERANCE = 40.0;
+	private static final double ORIENTATION_TOLERANCE = 10.0;
+
 	private final String TAG = "FollowBot";
 
 	private final CameraEstimator cameraEstimation = new CameraEstimator();
@@ -54,9 +59,16 @@ public class MainActivity extends Activity {
 	// PlotAChartEngine plotter;
 	private ScatterPlotView plotView;
 
-	private Filter filter;
+	// private Filter filter;
 
 	private float yaw;
+
+	private Filter distancePF;
+	private Filter orientationPF;
+	private Particles distancePrior;
+	private Particles orientationPrior;
+
+	private boolean initialMeasurement;
 
 	private final Periodical measurePeriodical = new Periodical() {
 
@@ -65,18 +77,24 @@ public class MainActivity extends Activity {
 		@Override
 		public void run(long millis) {
 			detectActivity();
+
 			if (pYaw != Double.MIN_VALUE) {
 				double diff = pYaw - yaw;
-				filter.userRotate(diff);
+
+				// aplies to distance particle filter
+				distancePF.userRotate(diff);
 			}
 			pYaw = yaw;
+
+			// control robot
+			robotControl();
 		}
 	};
 
 	private final Periodical plotPeriodical = new Periodical() {
 		@Override
 		public void run(long millis) {
-			plotView.plot(filter.getPositions());
+			plotView.plot(distancePF.getPositions());
 		}
 	};
 
@@ -128,14 +146,18 @@ public class MainActivity extends Activity {
 		cameraEstimation.openCameraView(
 				(CameraBridgeViewBase) findViewById(R.id.surface_view), 480,
 				360);
+		// first measurement flag
+		initialMeasurement = true;
 
 		// plotter = new PlotAChartEngine(this, );
 
 		plotView = new ScatterPlotView(this);
 
-		filter = new Filter(100, 25);
+		distancePF = new Filter(5000, 1000);
+		orientationPF = new Filter(5000, 0);
 
 		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
+
 		layout.addView(plotView);
 	}
 
@@ -236,10 +258,112 @@ public class MainActivity extends Activity {
 		FeatureVector feature = new FeatureVector(null,
 				FeatureExtractor.extractFeaturesFromFloat4(accelStack));
 		KNNClass klass = knn.classify(feature, 1);
+
 		if (klass != null) { // if there was no calibration before
 			Log.d(TAG, klass.getName());
 			TextView tv = (TextView) findViewById(R.id.activity_output);
 			tv.setText(klass.getName());
 		}
+	}
+
+	public void robotControl() {
+
+		// if the robot is seen by the camera, then use measurements to
+		// update the particle filter
+		if (cameraEstimation.robotSeen()) {
+
+			// if this is the first measurement, only update the weights,
+			// get the prior and resample
+			if (initialMeasurement) {
+				/* measure */
+				// camera distance measurement with 0.1 [m] deviation
+				distancePF.distanceMeasurement(
+						cameraEstimation.getDistanceUserRobot(), 0.1);
+
+				// camera orientation measurement with 10 [deg] deviation
+				orientationPF.orientationMeasurement(
+						cameraEstimation.getAngleOrientation(), 10);
+
+				// get prior
+				distancePrior = distancePF.getParticles();
+				orientationPrior = orientationPF.getParticles();
+
+				/* resample */
+				distancePF.resample();
+				orientationPF.resample();
+
+				// initial measurement complete
+				initialMeasurement = false;
+			} else {
+				/* move */
+				// TODO: apply user movement + IOIO commands
+
+				// move forward if too far (ON-OFF controller)
+				if (distancePF.getDistanceEstimate() > REFERENCE_DISTANCE
+						+ DISTANCE_TOLERANCE) {
+					// IOIO motor control (make robot go forward)
+
+					// Knowing the traveled distance of the robot at each time
+					// instant, we can update the particles in the filter
+					// E.g.: if we sample every 100 ms -> robot moves 10 cm in
+					// that time
+					distancePF.robotMove(10, 2);
+				}
+
+				// rotate if orientation is not good
+				double orientationEstimate = orientationPF
+						.getOrientationEstimate();
+
+				// ON-OFF control again
+				if ((Math.abs(orientationEstimate) > ORIENTATION_TOLERANCE)) {
+					// if the robot is pointing towards the right -> make it
+					// turn left; otherwise -> make it turn right
+					if (orientationEstimate < 0) {
+						// IOIO motor control (rotate robot)
+
+						// Same as with moving forward: we know how much it
+						// turns between samples -> we can update particles:
+						// 10 degrees per sample
+						orientationPF.robotRotate(10, 2);
+					} else {
+						// IOIO motor control (rotate robot)
+
+						// Same as with moving forward: we know how much it
+						// turns between samples -> we can update particles:
+						// -10 degrees per sample
+						orientationPF.robotRotate(-10, 2);
+					}
+				}
+
+				/* measure */
+				// camera distance measurement with 30 [cm] deviation
+				distancePF.distanceMeasurement(
+						cameraEstimation.getDistanceUserRobot(), 30);
+
+				// camera orientation measurement with 10 [deg] deviation
+				orientationPF.orientationMeasurement(
+						cameraEstimation.getAngleOrientation(), 10);
+
+				// multiply with prior
+				distancePF.multiplyPrior(distancePrior);
+				orientationPF.multiplyPrior(orientationPrior);
+
+				// update prior
+				distancePrior = distancePF.getParticles();
+				orientationPrior = orientationPF.getParticles();
+
+				/* resample */
+				distancePF.resample();
+				orientationPF.resample();
+			}
+		}
+		// robot is not seen by the camera anymore -> use movement
+		// estimations if we already have an initial measurement, otherwise
+		// wait for the user to make one camera measurement
+		else if (!initialMeasurement) {
+			// TODO: apply the movement methods and estimate distance and
+			// orientation
+		}
+
 	}
 }
