@@ -217,4 +217,17 @@ public class Filter {
 		return (orientation / particles.size());
 
 	}
+
+	public double[][] getPositions() {
+		double[][] x = new double[3][particles.size()];
+
+		for (int i = 0; i < particles.size(); i++) {
+			Particle p = particles.get(i);
+			x[0][i] = p.getX();
+			x[1][i] = p.getY();
+			x[2][i] = p.getWeight();
+		}
+
+		return x;
+	}
 }
