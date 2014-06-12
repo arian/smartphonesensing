@@ -70,6 +70,9 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 	CvSeq* blue_circles = cvHoughCircles(blue_thresh, blue_storage, CV_HOUGH_GRADIENT, 2,
 											blue_thresh->height/4, 100, 40, 10, 80);
 										
+	// Flag for robot detection
+	int robot_detected = 0;
+										
 	// Draw and connect the three circles
 	if ((green_circles->total >= 1) && (blue_circles->total >= 2)) {
 		float* c1 = (float*)cvGetSeqElem(green_circles, 0);
@@ -157,11 +160,22 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 				-9.0 / 16.0 * c1[2] + 105.0 / 2.0);
 		putText(mRgba, text, Point(20, 65), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
 		
+		// Set robot detected flag
+		robot_detected = 1;
+		
 		// Get a reference to this object's class
 		jclass thisClass = env->GetObjectClass(thiz);
 		
+		// Get the Field ID of the instance variable "robotDetected"
+		jfieldID fid = env->GetFieldID(thisClass, "robotDetected", "I");
+		
+		if (NULL != fid) {
+			// Change the variable's value
+			env->SetIntField(thiz, fid, robot_detected);
+		}
+		
 		// Get the Field ID of the instance variable "angleSkew"
-		jfieldID fid = env->GetFieldID(thisClass, "angleSkew", "I");
+		fid = env->GetFieldID(thisClass, "angleSkew", "I");
 		
 		if (NULL != fid) {
 			// Change the variable's value
@@ -206,6 +220,21 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 		if (NULL != fid) {
 			// Change the variable's value
 			env->SetIntField(thiz, fid, distance_user);
+		}
+	} 
+	else {
+		// Set robot detected flag
+		robot_detected = 0;
+		
+		// Get a reference to this object's class
+		jclass thisClass = env->GetObjectClass(thiz);
+		
+		// Get the Field ID of the instance variable "robotDetected"
+		jfieldID fid = env->GetFieldID(thisClass, "robotDetected", "I");
+		
+		if (NULL != fid) {
+			// Change the variable's value
+			env->SetIntField(thiz, fid, robot_detected);
 		}
 	}
 	
