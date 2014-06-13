@@ -36,13 +36,13 @@ public class CameraEstimator implements CvCameraViewListener2 {
 
 	private CameraBridgeViewBase mOpenCvCameraView;
 
-	private final float distancePhoneRobot = 0;
-	private final float distanceUserRobot = 0;
-	private final int angleOrientation = 0;
-	private final int angleSkew = 0;
-	private final int translationHorizontal = 0;
-	private final int translationVertical = 0;
-	private final int robotDetected = 0;
+	private float distancePhoneRobot = 0;
+	private float distanceUserRobot = 0;
+	private int angleOrientation = 0;
+	private int angleSkew = 0;
+	private int translationHorizontal = 0;
+	private int translationVertical = 0;
+	private int robotDetected = 0;
 
 	public void enableCamera() {
 		mOpenCvCameraView.enableView();
@@ -99,7 +99,8 @@ public class CameraEstimator implements CvCameraViewListener2 {
 							+ " " + this.getTranslationHorizontal() + " "
 							+ this.getTranslationVertical() + " "
 							+ this.getDistancePhoneRobot() + " "
-							+ this.getDistanceUserRobot() + "");
+							+ this.getDistanceUserRobot() + " " + robotSeen()
+							+ "");
 
 			break;
 		case VIEW_MODE_OD_RGBA:
@@ -119,7 +120,8 @@ public class CameraEstimator implements CvCameraViewListener2 {
 							+ " " + this.getTranslationHorizontal() + " "
 							+ this.getTranslationVertical() + " "
 							+ this.getDistancePhoneRobot() + " "
-							+ this.getDistanceUserRobot() + "");
+							+ this.getDistanceUserRobot() + " " + robotSeen()
+							+ "");
 
 			break;
 		}
