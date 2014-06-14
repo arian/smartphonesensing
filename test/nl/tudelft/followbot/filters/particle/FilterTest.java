@@ -38,4 +38,54 @@ public class FilterTest {
 		assertEquals(0, ps.get(4).getWeight(), 1e-6);
 	}
 
+	@Test
+	public void testOrientationMeasurement() {
+		Filter filter = new Filter().withRandom(new RandomMock())
+				.withDistribution(new NormalDistributionMock()).fill(4, 5);
+
+		filter.orientationMeasurement(Math.PI * 0.5, 0.5);
+
+		Particles ps = filter.getParticles();
+		assertEquals(0, ps.get(0).getWeight(), 1e-6);
+		assertEquals(0, ps.get(1).getWeight(), 1e-6);
+		assertEquals(0, ps.get(2).getWeight(), 1e-6);
+		assertEquals(1, ps.get(3).getWeight(), 1e-6);
+	}
+
+	@Test
+	public void testUserMove() {
+		Filter filter = new Filter().withRandom(new RandomMock())
+				.withDistribution(new NormalDistributionMock());
+
+		Particles ps = filter.getParticles();
+		Particle p = new Particle(0, 0, 0);
+		ps.add(p);
+
+		// at all four [1,1] points around the origin
+		p.setXYO(-1, 1, 0);
+		filter.userMove(2, 0);
+		assertEquals("(-1,-1,-90)", p.toRoundString());
+
+		p.setXYO(1, 1, 0);
+		filter.userMove(2, 0);
+		assertEquals("(1,-1,90)", p.toRoundString());
+
+		p.setXYO(1, -1, 0);
+		filter.userMove(2, 0);
+		assertEquals("(1,-3,27)", p.toRoundString());
+
+		p.setXYO(-1, -1, 0);
+		filter.userMove(2, 0);
+		assertEquals("(-1,-3,-27)", p.toRoundString());
+
+		// with initial orientation
+		p.setXYO(1, 2, Math.PI / 2);
+		filter.userMove(1, 0);
+		assertEquals("(1,1,108)", p.toRoundString());
+
+		p.setXYO(-1, 2, Math.PI / 2);
+		filter.userMove(1, 0);
+		assertEquals("(-1,1,72)", p.toRoundString());
+	}
+
 }

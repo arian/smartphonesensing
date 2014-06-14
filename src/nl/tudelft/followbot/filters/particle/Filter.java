@@ -139,31 +139,31 @@ public class Filter {
 	 * User moves d meters in direction alpha, with std deviation sigma
 	 *
 	 * @param d
-	 * @param alpha
 	 * @param sigma
 	 */
-	public void userMove(double d, double alpha, double sigma) {
-		// alpha = 0 means moving forward -> increasing all y with d
-		alpha += Math.PI / 2;
-
-		for (int i = 0; i < particles.size(); i++) {
+	public void userMove(double d, double sigma) {
+		int N = particles.size();
+		for (int i = 0; i < N; i++) {
 			Particle p = particles.get(i);
-			double dist = distribution.getQuantile(d, sigma, Math.random());
+			double dy = distribution.getQuantile(d, sigma, random.get(1, 1));
 
-			double oldX = p.getX();
-			double oldY = p.getY();
+			// current point
+			double x = p.getX();
+			double y = p.getY();
 
-			double newX = oldX + Math.cos(alpha) * dist;
-			double newY = oldY + Math.sin(alpha) * dist;
+			// new y position
+			double ny = y - dy;
 
-			double newOrientation = p.getOrientation()
-					+ Math.acos((oldX * newX + oldY * newY)
-							/ (Math.sqrt(oldX * oldX + oldY * oldY) * Math
-									.sqrt(newX * newX + newY * newY)));
+			// angles of the points
+			double angle1 = Math.atan2(y, x);
+			double angle2 = Math.atan2(ny, x);
 
-			p.setX(newX);
-			p.setY(newY);
-			p.setOrientation(newOrientation);
+			// angle between points from the origin
+			double angle = angle1 - angle2;
+
+			// set new values
+			p.setY(ny);
+			p.setOrientation(p.getOrientation() + angle);
 		}
 	}
 
@@ -277,7 +277,7 @@ public class Filter {
 
 	static public void main(String[] argv) {
 		Filter filter = new Filter().withRandom(new RandomMock())
-				.withDistribution(new NormalDistributionMock()).fill(10, 10);
+				.withDistribution(new NormalDistributionMock()).fill(5, 10);
 
 		filter.distanceMeasurement(5, 0.1);
 		filter.plot("Initial measurement");

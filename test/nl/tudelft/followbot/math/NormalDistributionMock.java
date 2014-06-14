@@ -13,7 +13,7 @@ public class NormalDistributionMock implements IDistribution {
 
 	@Override
 	public double getQuantile(double mean, double sigma, double p) {
-		return 0;
+		return mean;
 	}
 
 }
