@@ -90,8 +90,10 @@ public class Filter {
 	public void distanceMeasurement(double distance, double sigma) {
 		for (int i = 0; i < particles.size(); i++) {
 			Particle p = particles.get(i);
+
 			double x = p.distanceToOrigin();
 			double w = distribution.getDensity(distance, sigma, x);
+
 			p.setWeight(w);
 		}
 	}
@@ -106,8 +108,21 @@ public class Filter {
 	public void orientationMeasurement(double orientation, double sigma) {
 		for (int i = 0; i < particles.size(); i++) {
 			Particle p = particles.get(i);
+
 			double a = p.getOrientation();
 			double w = distribution.getDensity(orientation, sigma, a);
+
+			p.setWeight(w);
+		}
+	}
+
+	public void headingMeasurement(double heading, double sigma) {
+		for (int i = 0; i < particles.size(); i++) {
+			Particle p = particles.get(i);
+
+			double a = p.angleToOrigin();
+			double w = distribution.getDensity(heading, sigma, a);
+
 			p.setWeight(w);
 		}
 	}
@@ -252,75 +267,73 @@ public class Filter {
 	}
 
 	static public void main(String[] argv) {
-		Filter filter = new Filter(50000, 1000);
+		Filter filter = new Filter(10000, 1000);
 
 		filter.distanceMeasurement(200.0, 30);
 		filter.plot("Initial measurement");
 
-		Particles prior1 = filter.getParticles();
-
 		filter.resample();
 		filter.plot("after resampling");
 
-		filter.orientationMeasurement(0, 10);
-		filter.plot("Orientation Measurement");
-
-		Particles prior2 = filter.getParticles();
+		filter.headingMeasurement(0, 0.3);
+		filter.plot("Heading measurement");
 
 		filter.resample();
 		filter.plot("after resampling 2");
 
-		filter.robotMove(30, 5);
-
-		filter.distanceMeasurement(175, 30);
-		filter.plot("new distance measurement");
-
-		filter.multiplyPrior(prior1);
-		filter.plot("after multiplying with prior");
-
-		prior1 = filter.getParticles();
-
-		filter.resample();
-		filter.plot("after resampling 3");
-
 		filter.orientationMeasurement(0, 10);
 		filter.plot("Orientation Measurement");
 
-		filter.multiplyPrior(prior2);
-		filter.plot("after multiplying with prior 2");
-
-		prior2 = filter.getParticles();
-
-		filter.resample();
-		filter.plot("after resampling 4");
-
-		// another test
-
-		filter.robotRotate(10, 5);
-
-		filter.distanceMeasurement(175, 30);
-		filter.plot("new distance measurement");
-
-		filter.multiplyPrior(prior1);
-		filter.plot("after multiplying with prior");
-
 		filter.resample();
 		filter.plot("after resampling 3");
 
-		filter.orientationMeasurement(8, 10);
-		filter.plot("Orientation Measurement");
+		filter.robotMove(30, 5);
 
-		filter.multiplyPrior(prior2);
-		filter.plot("after multiplying with prior 2");
+		Particles prior = filter.getParticles();
 
-		filter.resample();
-		filter.plot("after resampling 4");
+		// filter.distanceMeasurement(175, 30);
+		filter.plot("move");
 
-		System.out.println("Distance: " + filter.getDistanceEstimate()
-				+ " Orientation: " + filter.getOrientationEstimate());
+		// filter.resample();
+		// filter.plot("after resampling 4");
 
+		// filter.orientationMeasurement(0, 10);
+		// filter.plot("Orientation Measurement");
+
+		filter.multiplyPrior(prior);
+		filter.plot("after multiplying with prior");
 		/*
-		 * filter.orientationMeasurement(Math.PI / 3.0, 2.0);
+		 * filter.multiplyPrior(prior2);
+		 * filter.plot("after multiplying with prior 2");
+		 * 
+		 * prior2 = filter.getParticles();
+		 * 
+		 * filter.resample(); filter.plot("after resampling 4");
+		 * 
+		 * // another test
+		 * 
+		 * filter.robotRotate(10, 5);
+		 * 
+		 * filter.distanceMeasurement(175, 30);
+		 * filter.plot("new distance measurement");
+		 * 
+		 * filter.multiplyPrior(prior1);
+		 * filter.plot("after multiplying with prior");
+		 * 
+		 * filter.resample(); filter.plot("after resampling 3");
+		 * 
+		 * filter.orientationMeasurement(8, 10);
+		 * filter.plot("Orientation Measurement");
+		 * 
+		 * filter.multiplyPrior(prior2);
+		 * filter.plot("after multiplying with prior 2");
+		 * 
+		 * filter.resample(); filter.plot("after resampling 4");
+		 * 
+		 * System.out.println("Distance: " + filter.getDistanceEstimate() +
+		 * " Orientation: " + filter.getOrientationEstimate());
+		 * 
+		 * /* filter.orientationMeasurement(Math.PI / 3.0, 2.0);
 		 * filter.plot("Orientation Measurement");
 		 * 
 		 * 
