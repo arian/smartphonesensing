@@ -84,7 +84,7 @@ public class Particle {
 	}
 
 	public double angleToOrigin() {
-		return (Math.atan2(this.y, this.x) - Math.atan2(0, 1));
+		return (Math.atan2(y, x) - Math.atan2(0, 1));
 	}
 
 	@Override

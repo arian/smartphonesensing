@@ -5,9 +5,7 @@ import javax.swing.JFrame;
 import nl.tudelft.followbot.math.IDistribution;
 import nl.tudelft.followbot.math.IRandom;
 import nl.tudelft.followbot.math.NormalDistribution;
-import nl.tudelft.followbot.math.NormalDistributionMock;
 import nl.tudelft.followbot.math.Random;
-import nl.tudelft.followbot.math.RandomMock;
 
 import org.math.plot.Plot3DPanel;
 
@@ -96,6 +94,37 @@ public class Filter {
 					break;
 				}
 			}
+		}
+
+		particles = ps;
+	}
+
+	/**
+	 * New fancy resampling
+	 * 
+	 * @TODO find out which method this is.
+	 */
+	public void newResample() {
+		Particles ps = new Particles();
+
+		particles.normalizeWeights();
+
+		int index = 0;
+		int N = particles.size();
+
+		double newWeight = 1 / N;
+		double mw = particles.maxWeight();
+		double beta = 0;
+
+		for (int i = 0; i < N; i++) {
+			beta += random.get() * 2.0 * mw;
+			while (beta > particles.get(index).getWeight()) {
+				beta -= particles.get(index).getWeight();
+				index = (index + 1) % N;
+			}
+			Particle newParticle = particles.get(index).clone();
+			newParticle.setWeight(newWeight);
+			ps.add(newParticle);
 		}
 
 		particles = ps;
@@ -290,43 +319,37 @@ public class Filter {
 	}
 
 	static public void main(String[] argv) {
-		Filter filter = new Filter().withRandom(new RandomMock())
-				.withDistribution(new NormalDistributionMock())
-				.fill(10000, 1000);
+		Filter filter = new Filter().fill(10000, 10);
 
 		filter.distanceMeasurement(5, 0.1);
 		filter.plot("Initial measurement");
 
-		filter.resample();
-		filter.plot("after resampling");
+		filter.newResample();
 
 		filter.headingMeasurement(0, 0.3);
 		filter.plot("Heading measurement");
-
-		filter.resample();
-		filter.plot("after resampling 2");
-
-		filter.orientationMeasurement(0, 10);
-		filter.plot("Orientation Measurement");
-
-		filter.resample();
-		filter.plot("after resampling 3");
-
-		filter.robotMove(30, 5);
-
-		Particles prior = filter.getParticles();
-
-		// filter.distanceMeasurement(175, 30);
-		filter.plot("move");
-
+		/*
+		 * filter.resample(); filter.plot("after resampling 2");
+		 * 
+		 * filter.orientationMeasurement(0, 10);
+		 * filter.plot("Orientation Measurement");
+		 * 
+		 * filter.resample(); filter.plot("after resampling 3");
+		 * 
+		 * filter.robotMove(30, 5);
+		 * 
+		 * Particles prior = filter.getParticles();
+		 * 
+		 * // filter.distanceMeasurement(175, 30); filter.plot("move");
+		 */
 		// filter.resample();
 		// filter.plot("after resampling 4");
 
 		// filter.orientationMeasurement(0, 10);
 		// filter.plot("Orientation Measurement");
 
-		filter.multiplyPrior(prior);
-		filter.plot("after multiplying with prior");
+		// filter.multiplyPrior(prior);
+		// filter.plot("after multiplying with prior");
 		/*
 		 * filter.multiplyPrior(prior2);
 		 * filter.plot("after multiplying with prior 2");

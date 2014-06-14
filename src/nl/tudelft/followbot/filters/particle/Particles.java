@@ -16,6 +16,14 @@ public class Particles extends ArrayList<Particle> {
 		return sum;
 	}
 
+	public double maxWeight() {
+		double max = Double.MIN_VALUE;
+		for (int i = 0; i < size(); i++) {
+			max = Math.max(max, get(i).getWeight());
+		}
+		return max;
+	}
+
 	public void normalizeWeights() {
 		double sum = sumWeights();
 		if (sum == 0) {
