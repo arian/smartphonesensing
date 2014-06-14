@@ -1,15 +1,21 @@
 package nl.tudelft.followbot.filters.particle;
 
-import static nl.tudelft.followbot.math.NormalDistribution.getDensity;
-import static nl.tudelft.followbot.math.NormalDistribution.getQuantile;
+import javax.swing.JFrame;
+
+import nl.tudelft.followbot.math.INormalDistribution;
+import nl.tudelft.followbot.math.NormalDistribution;
+
+import org.math.plot.Plot3DPanel;
 
 public class Filter {
 
 	private Particles particles = new Particles();
+	private final INormalDistribution distribution;
 
 	public Filter(int N, double radius) {
 		assert N > 0 : "Number of particles should be positive";
 		fillInitialParticles(N, radius);
+		distribution = new NormalDistribution();
 	}
 
 	private void fillInitialParticles(int N, double radius) {
@@ -84,7 +90,7 @@ public class Filter {
 		for (int i = 0; i < particles.size(); i++) {
 			Particle p = particles.get(i);
 			double x = p.distanceToOrigin();
-			double w = getDensity(distance, sigma, x);
+			double w = distribution.getDensity(distance, sigma, x);
 			p.setWeight(w);
 		}
 	}
@@ -100,7 +106,7 @@ public class Filter {
 		for (int i = 0; i < particles.size(); i++) {
 			Particle p = particles.get(i);
 			double a = p.getOrientation();
-			double w = getDensity(orientation, sigma, a);
+			double w = distribution.getDensity(orientation, sigma, a);
 			p.setWeight(w);
 		}
 	}
@@ -118,7 +124,7 @@ public class Filter {
 
 		for (int i = 0; i < particles.size(); i++) {
 			Particle p = particles.get(i);
-			double dist = getQuantile(d, sigma, Math.random());
+			double dist = distribution.getQuantile(d, sigma, Math.random());
 
 			double oldX = p.getX();
 			double oldY = p.getY();
@@ -165,7 +171,7 @@ public class Filter {
 		for (int i = 0; i < particles.size(); i++) {
 			Particle p = particles.get(i);
 
-			double dist = getQuantile(d, sigma, Math.random());
+			double dist = distribution.getQuantile(d, sigma, Math.random());
 
 			p.setX(p.getX() + Math.cos(p.getOrientation()) * dist);
 			p.setY(p.getY() + Math.sin(p.getOrientation()) * dist);
@@ -186,48 +192,8 @@ public class Filter {
 		for (int i = 0; i < particles.size(); i++) {
 			Particle p = particles.get(i);
 
-			double dalpha = getQuantile(alpha, sigma, Math.random());
-
-			p.setOrientation(p.getOrientation() + dalpha);
-		}
-
-		// IOIO code
-	}
-
-	/**
-	 * Robot moves d meters along its direction, with std deviation sigma
-	 *
-	 * @param d
-	 * @param sigma
-	 *
-	 *            TODO: Add actual robot movement through IOIO
-	 */
-	public void robotMove(double d, double sigma) {
-		for (int i = 0; i < particles.size(); i++) {
-			Particle p = particles.get(i);
-
-			double dist = getQuantile(d, sigma, Math.random());
-
-			p.setX(p.getX() + Math.cos(p.getOrientation()) * dist);
-			p.setY(p.getY() + Math.sin(p.getOrientation()) * dist);
-		}
-
-		// IOIO code
-	}
-
-	/**
-	 * Robot rotates with angle alpha [rad], with std deviation sigma
-	 *
-	 * @param d
-	 * @param sigma
-	 *
-	 *            TODO: Add actual robot movement through IOIO
-	 */
-	public void robotRotate(double alpha, double sigma) {
-		for (int i = 0; i < particles.size(); i++) {
-			Particle p = particles.get(i);
-
-			double dalpha = getQuantile(alpha, sigma, Math.random());
+			double dalpha = distribution.getQuantile(alpha, sigma,
+					Math.random());
 
 			p.setOrientation(p.getOrientation() + dalpha);
 		}
