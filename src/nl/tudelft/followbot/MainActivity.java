@@ -153,8 +153,8 @@ public class MainActivity extends Activity {
 
 		plotView = new ScatterPlotView(this);
 
-		distancePF = new Filter(5000, 1000);
-		orientationPF = new Filter(5000, 0);
+		distancePF = new Filter().fill(5000, 1000);
+		orientationPF = new Filter().fill(5000, 0);
 
 		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
 

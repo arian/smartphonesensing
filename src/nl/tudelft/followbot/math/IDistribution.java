@@ -1,6 +1,6 @@
 package nl.tudelft.followbot.math;
 
-public interface INormalDistribution {
+public interface IDistribution {
 
 	/**
 	 * Probability density function

@@ -2,35 +2,53 @@ package nl.tudelft.followbot.filters.particle;
 
 import javax.swing.JFrame;
 
-import nl.tudelft.followbot.math.INormalDistribution;
+import nl.tudelft.followbot.math.IDistribution;
+import nl.tudelft.followbot.math.IRandom;
 import nl.tudelft.followbot.math.NormalDistribution;
+import nl.tudelft.followbot.math.NormalDistributionMock;
+import nl.tudelft.followbot.math.Random;
+import nl.tudelft.followbot.math.RandomMock;
 
 import org.math.plot.Plot3DPanel;
 
 public class Filter {
 
 	private Particles particles = new Particles();
-	private final INormalDistribution distribution;
+	private IDistribution distribution;
+	private IRandom random;
 
-	public Filter(int N, double radius) {
-		assert N > 0 : "Number of particles should be positive";
-		fillInitialParticles(N, radius);
+	public Filter() {
 		distribution = new NormalDistribution();
+		random = new Random();
 	}
 
-	private void fillInitialParticles(int N, double radius) {
+	public Filter withDistribution(IDistribution d) {
+		distribution = d;
+		return this;
+	}
+
+	public Filter withRandom(IRandom r) {
+		random = r;
+		return this;
+	}
+
+	public Filter fill(int N, double radius) {
+		assert N > 0 : "Number of particles should be positive";
+		assert radius > 0 : "Radius should be greater than 0";
+
 		for (int i = 0; i < N; i++) {
-			double r = radius * Math.random();
-			double a = 2 * Math.PI * Math.random();
+			double r = radius * random.get(i, N);
+			double a = 2 * Math.PI * random.get(i, N);
 
 			// orientation is between [-pi; pi] degrees
-			double orientation = Math.PI * (2 * Math.random() - 1);
+			double orientation = Math.PI * (2 * random.get(i, N) - 1);
 
 			Particle p = new Particle(r * Math.cos(a), r * Math.sin(a),
 					orientation);
 			p.setWeight(1.0 / N);
 			particles.add(p);
 		}
+		return this;
 	}
 
 	public Particles getParticles() {
@@ -51,6 +69,12 @@ public class Filter {
 		}
 	}
 
+	/**
+	 * Multinomial resampling
+	 * 
+	 * @link http://robotics.stackexchange.com/a/484
+	 * @link http://users.isy.liu.se/rt/schon/Publications/HolSG2006.pdf
+	 */
 	public void resample() {
 		Particles ps = new Particles();
 
@@ -60,7 +84,7 @@ public class Filter {
 		double newWeight = 1 / N;
 
 		for (int i = 0; i < N; i++) {
-			double x = Math.random();
+			double x = random.get(i, N);
 			double sum = 0;
 
 			for (int j = 0; j < N; j++) {
@@ -252,75 +276,70 @@ public class Filter {
 	}
 
 	static public void main(String[] argv) {
-		Filter filter = new Filter(50000, 1000);
+		Filter filter = new Filter().withRandom(new RandomMock())
+				.withDistribution(new NormalDistributionMock()).fill(10, 10);
 
-		filter.distanceMeasurement(200.0, 30);
+		filter.distanceMeasurement(5, 0.1);
 		filter.plot("Initial measurement");
 
-		Particles prior1 = filter.getParticles();
-
-		filter.resample();
-		filter.plot("after resampling");
-
-		filter.orientationMeasurement(0, 10);
-		filter.plot("Orientation Measurement");
-
-		Particles prior2 = filter.getParticles();
-
-		filter.resample();
-		filter.plot("after resampling 2");
-
-		filter.robotMove(30, 5);
-
-		filter.distanceMeasurement(175, 30);
-		filter.plot("new distance measurement");
-
-		filter.multiplyPrior(prior1);
-		filter.plot("after multiplying with prior");
-
-		prior1 = filter.getParticles();
-
-		filter.resample();
-		filter.plot("after resampling 3");
-
-		filter.orientationMeasurement(0, 10);
-		filter.plot("Orientation Measurement");
-
-		filter.multiplyPrior(prior2);
-		filter.plot("after multiplying with prior 2");
-
-		prior2 = filter.getParticles();
-
-		filter.resample();
-		filter.plot("after resampling 4");
-
-		// another test
-
-		filter.robotRotate(10, 5);
-
-		filter.distanceMeasurement(175, 30);
-		filter.plot("new distance measurement");
-
-		filter.multiplyPrior(prior1);
-		filter.plot("after multiplying with prior");
-
-		filter.resample();
-		filter.plot("after resampling 3");
-
-		filter.orientationMeasurement(8, 10);
-		filter.plot("Orientation Measurement");
-
-		filter.multiplyPrior(prior2);
-		filter.plot("after multiplying with prior 2");
-
-		filter.resample();
-		filter.plot("after resampling 4");
-
-		System.out.println("Distance: " + filter.getDistanceEstimate()
-				+ " Orientation: " + filter.getOrientationEstimate());
-
 		/*
-		 * filter.orientationMeasurement(Math.PI / 3.0, 2.0);
+		 * Particles prior1 = filter.getParticles();
+		 * 
+		 * filter.resample(); filter.plot("after resampling");
+		 * 
+		 * filter.orientationMeasurement(0, 10);
+		 * filter.plot("Orientation Measurement");
+		 * 
+		 * Particles prior2 = filter.getParticles();
+		 * 
+		 * filter.resample(); filter.plot("after resampling 2");
+		 * 
+		 * filter.robotMove(30, 5);
+		 * 
+		 * filter.distanceMeasurement(175, 30);
+		 * filter.plot("new distance measurement");
+		 * 
+		 * filter.multiplyPrior(prior1);
+		 * filter.plot("after multiplying with prior");
+		 * 
+		 * prior1 = filter.getParticles();
+		 * 
+		 * filter.resample(); filter.plot("after resampling 3");
+		 * 
+		 * filter.orientationMeasurement(0, 10);
+		 * filter.plot("Orientation Measurement");
+		 * 
+		 * filter.multiplyPrior(prior2);
+		 * filter.plot("after multiplying with prior 2");
+		 * 
+		 * prior2 = filter.getParticles();
+		 * 
+		 * filter.resample(); filter.plot("after resampling 4");
+		 * 
+		 * // another test
+		 * 
+		 * filter.robotRotate(10, 5);
+		 * 
+		 * filter.distanceMeasurement(175, 30);
+		 * filter.plot("new distance measurement");
+		 * 
+		 * filter.multiplyPrior(prior1);
+		 * filter.plot("after multiplying with prior");
+		 * 
+		 * filter.resample(); filter.plot("after resampling 3");
+		 * 
+		 * filter.orientationMeasurement(8, 10);
+		 * filter.plot("Orientation Measurement");
+		 * 
+		 * filter.multiplyPrior(prior2);
+		 * filter.plot("after multiplying with prior 2");
+		 * 
+		 * filter.resample(); filter.plot("after resampling 4");
+		 * 
+		 * System.out.println("Distance: " + filter.getDistanceEstimate() +
+		 * " Orientation: " + filter.getOrientationEstimate());
+		 * 
+		 * /* filter.orientationMeasurement(Math.PI / 3.0, 2.0);
 		 * filter.plot("Orientation Measurement");
 		 *
 		 *
