@@ -61,10 +61,8 @@ public class Filter {
 					"Prior size does not correspond with number of particles");
 		}
 
-		for (int i = 0; i < particles.size(); i++) {
-			Particle ppost = particles.get(i);
+		for (Particle ppost : particles) {
 			Particle pprior = prior.getParticleAt(ppost.getX(), ppost.getY());
-
 			ppost.setWeight(ppost.getWeight() * pprior.getWeight());
 		}
 	}
@@ -111,12 +109,9 @@ public class Filter {
 	 * @param sigma
 	 */
 	public void distanceMeasurement(double distance, double sigma) {
-		for (int i = 0; i < particles.size(); i++) {
-			Particle p = particles.get(i);
-
+		for (Particle p : particles) {
 			double x = p.distanceToOrigin();
 			double w = distribution.getDensity(distance, sigma, x);
-
 			p.setWeight(w);
 		}
 	}
@@ -129,23 +124,17 @@ public class Filter {
 	 * @param sigma
 	 */
 	public void orientationMeasurement(double orientation, double sigma) {
-		for (int i = 0; i < particles.size(); i++) {
-			Particle p = particles.get(i);
-
+		for (Particle p : particles) {
 			double a = p.getOrientation();
 			double w = distribution.getDensity(orientation, sigma, a);
-
 			p.setWeight(w);
 		}
 	}
 
 	public void headingMeasurement(double heading, double sigma) {
-		for (int i = 0; i < particles.size(); i++) {
-			Particle p = particles.get(i);
-
+		for (Particle p : particles) {
 			double a = p.angleToOrigin();
 			double w = distribution.getDensity(heading, sigma, a);
-
 			p.setWeight(w);
 		}
 	}
@@ -157,9 +146,7 @@ public class Filter {
 	 * @param sigma
 	 */
 	public void userMove(double d, double sigma) {
-		int N = particles.size();
-		for (int i = 0; i < N; i++) {
-			Particle p = particles.get(i);
+		for (Particle p : particles) {
 			double dy = distribution.getQuantile(d, sigma, random.get());
 
 			// current point
