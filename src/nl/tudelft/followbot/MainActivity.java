@@ -82,7 +82,7 @@ public class MainActivity extends Activity {
 				double diff = pYaw - yaw;
 
 				// aplies to distance particle filter
-				distancePF.userRotate(diff);
+				distancePF.userRotate(diff, 0.1);
 			}
 			pYaw = yaw;
 

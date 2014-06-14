@@ -88,4 +88,52 @@ public class FilterTest {
 		assertEquals("(-1,1,72)", p.toRoundString());
 	}
 
+	@Test
+	public void testUserRotate() {
+		Filter filter = new Filter().withRandom(new RandomMock())
+				.withDistribution(new NormalDistributionMock());
+
+		Particles ps = filter.getParticles();
+		Particle p = new Particle(0, 0, 0);
+		ps.add(p);
+
+		p.setXYO(1, 1, 0);
+		filter.userRotate(Math.PI / 2, 0);
+		assertEquals("(-1,1,0)", p.toRoundString());
+
+		p.setXYO(1, 1, 0);
+		filter.userRotate(Math.PI, 0);
+		assertEquals("(-1,-1,0)", p.toRoundString());
+
+		p.setXYO(-1, 1, 0);
+		filter.userRotate(Math.PI, 0);
+		assertEquals("(1,-1,0)", p.toRoundString());
+	}
+
+	@Test
+	public void testRobotMove() {
+		Filter filter = new Filter().withRandom(new RandomMock())
+				.withDistribution(new NormalDistributionMock());
+
+		Particles ps = filter.getParticles();
+		Particle p = new Particle(0, 0, 0);
+		ps.add(p);
+
+		p.setXYO(0, 2, 0);
+		filter.robotMove(1, 0);
+		assertEquals("(0,1,0)", p.toRoundString());
+
+		p.setXYO(1, 0, Math.PI / 2);
+		filter.robotMove(1, 0);
+		assertEquals("(1,-1,135)", p.toRoundString());
+
+		p.setXYO(2, 2, -Math.PI / 4);
+		filter.robotMove(2, 0);
+		assertEquals("(0,2,-90)", p.toRoundString());
+
+		p.setXYO(-2, -2, Math.PI / 4);
+		filter.robotMove(2, 0);
+		assertEquals("(-2,0,90)", p.toRoundString());
+	}
+
 }

@@ -8,4 +8,9 @@ public class RandomMock implements IRandom {
 		return ((double) x) / ((double) X);
 	}
 
+	@Override
+	public double get() {
+		return 1;
+	}
+
 }
