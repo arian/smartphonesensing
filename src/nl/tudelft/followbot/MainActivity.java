@@ -8,7 +8,6 @@ import nl.tudelft.followbot.camera.CameraEstimator;
 import nl.tudelft.followbot.data.DataStack;
 import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.filters.particle.Filter;
-import nl.tudelft.followbot.filters.particle.Particles;
 import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
@@ -59,14 +58,9 @@ public class MainActivity extends Activity {
 	// PlotAChartEngine plotter;
 	private ScatterPlotView plotView;
 
-	// private Filter filter;
+	private Filter filter;
 
 	private float yaw;
-
-	private Filter distancePF;
-	private Filter orientationPF;
-	private Particles distancePrior;
-	private Particles orientationPrior;
 
 	private boolean initialMeasurement;
 
@@ -82,7 +76,7 @@ public class MainActivity extends Activity {
 				double diff = pYaw - yaw;
 
 				// aplies to distance particle filter
-				distancePF.userRotate(diff, 0.1);
+				filter.userRotate(diff, 0.1);
 			}
 			pYaw = yaw;
 
@@ -94,7 +88,7 @@ public class MainActivity extends Activity {
 	private final Periodical plotPeriodical = new Periodical() {
 		@Override
 		public void run(long millis) {
-			plotView.plot(distancePF.getPositions());
+			plotView.plot(filter.getPositions());
 		}
 	};
 
@@ -153,8 +147,7 @@ public class MainActivity extends Activity {
 
 		plotView = new ScatterPlotView(this);
 
-		distancePF = new Filter().fill(5000, 1000);
-		orientationPF = new Filter().fill(5000, 0);
+		filter = new Filter().fill(1000, 0);
 
 		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
 
@@ -277,20 +270,15 @@ public class MainActivity extends Activity {
 			if (initialMeasurement) {
 				/* measure */
 				// camera distance measurement with 0.1 [m] deviation
-				distancePF.distanceMeasurement(
+				filter.distanceMeasurement(
 						cameraEstimation.getDistanceUserRobot(), 0.1);
 
 				// camera orientation measurement with 10 [deg] deviation
-				orientationPF.orientationMeasurement(
+				filter.orientationMeasurement(
 						cameraEstimation.getAngleOrientation(), 10);
 
-				// get prior
-				distancePrior = distancePF.getParticles();
-				orientationPrior = orientationPF.getParticles();
-
 				/* resample */
-				distancePF.resample();
-				orientationPF.resample();
+				filter.resample();
 
 				// initial measurement complete
 				initialMeasurement = false;
@@ -299,7 +287,7 @@ public class MainActivity extends Activity {
 				// TODO: apply user movement + IOIO commands
 
 				// move forward if too far (ON-OFF controller)
-				if (distancePF.getDistanceEstimate() > REFERENCE_DISTANCE
+				if (filter.getDistanceEstimate() > REFERENCE_DISTANCE
 						+ DISTANCE_TOLERANCE) {
 					// IOIO motor control (make robot go forward)
 
@@ -307,54 +295,45 @@ public class MainActivity extends Activity {
 					// instant, we can update the particles in the filter
 					// E.g.: if we sample every 100 ms -> robot moves 10 cm in
 					// that time
-					distancePF.robotMove(10, 2);
+					filter.robotMove(10, 2);
 				}
 
-				// rotate if orientation is not good
-				double orientationEstimate = orientationPF
-						.getOrientationEstimate();
+				// rotate if orientation is not good double
+				// orientationEstimate = filter.getOrientationEstimate();
 
 				// ON-OFF control again
-				if ((Math.abs(orientationEstimate) > ORIENTATION_TOLERANCE)) {
-					// if the robot is pointing towards the right -> make it
-					// turn left; otherwise -> make it turn right
-					if (orientationEstimate < 0) {
-						// IOIO motor control (rotate robot)
-
-						// Same as with moving forward: we know how much it
-						// turns between samples -> we can update particles:
-						// 10 degrees per sample
-						orientationPF.robotRotate(10, 2);
-					} else {
-						// IOIO motor control (rotate robot)
-
-						// Same as with moving forward: we know how much it
-						// turns between samples -> we can update particles:
-						// -10 degrees per sample
-						orientationPF.robotRotate(-10, 2);
-					}
-				}
+				// if ((Math.abs(orientationEstimate) > ORIENTATION_TOLERANCE))
+				// {
+				// // if the robot is pointing towards the right -> make it
+				// // turn left; otherwise -> make it turn right
+				// if (orientationEstimate < 0) {
+				// // IOIO motor control (rotate robot)
+				//
+				// // Same as with moving forward: we know how much it
+				// // turns between samples -> we can update particles:
+				// // 10 degrees per sample
+				// orientationPF.robotRotate(10, 2);
+				// } else {
+				// // IOIO motor control (rotate robot)
+				//
+				// // Same as with moving forward: we know how much it
+				// // turns between samples -> we can update particles:
+				// // -10 degrees per sample
+				// orientationPF.robotRotate(-10, 2);
+				// }
+				// }
 
 				/* measure */
 				// camera distance measurement with 30 [cm] deviation
-				distancePF.distanceMeasurement(
+				filter.distanceMeasurement(
 						cameraEstimation.getDistanceUserRobot(), 30);
 
 				// camera orientation measurement with 10 [deg] deviation
-				orientationPF.orientationMeasurement(
+				filter.orientationMeasurement(
 						cameraEstimation.getAngleOrientation(), 10);
 
-				// multiply with prior
-				distancePF.multiplyPrior(distancePrior);
-				orientationPF.multiplyPrior(orientationPrior);
-
-				// update prior
-				distancePrior = distancePF.getParticles();
-				orientationPrior = orientationPF.getParticles();
-
 				/* resample */
-				distancePF.resample();
-				orientationPF.resample();
+				filter.resample();
 			}
 		}
 		// robot is not seen by the camera anymore -> use movement
