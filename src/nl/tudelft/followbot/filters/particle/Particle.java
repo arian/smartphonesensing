@@ -83,6 +83,10 @@ public class Particle {
 		return Math.sqrt(distanceToSquare(0, 0));
 	}
 
+	public double angleToOrigin() {
+		return (Math.atan2(this.y, this.x) - Math.atan2(0, 1));
+	}
+
 	@Override
 	public Particle clone() {
 		Particle clone = new Particle(x, y, a);
