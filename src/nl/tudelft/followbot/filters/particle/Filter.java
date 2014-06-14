@@ -23,8 +23,8 @@ public class Filter {
 			double r = radius * Math.random();
 			double a = 2 * Math.PI * Math.random();
 
-			// orientation is between [-90; 90] degrees
-			double orientation = 90 * (2 * Math.random() - 1);
+			// orientation is between [-pi; pi] degrees
+			double orientation = Math.PI * (2 * Math.random() - 1);
 
 			Particle p = new Particle(r * Math.cos(a), r * Math.sin(a),
 					orientation);
