@@ -27,7 +27,7 @@ public class KNNTest {
 	}
 
 	@Test
-	public void testClassifyNis3() {
+	public void testClassifyNIs3() {
 		KNN knn = new KNN();
 
 		KNNClass x = new KNNClass("x");
@@ -44,6 +44,22 @@ public class KNNTest {
 		KNNClass z = knn.classify(new FeatureVector(null, feat), 3);
 
 		assertEquals(y, z);
+	}
+
+	@Test
+	public void testClassifyScaling() {
+		KNN knn = new KNN();
+
+		KNNClass x = new KNNClass("x");
+		KNNClass y = new KNNClass("y");
+
+		knn.add(new FeatureVector(x, new float[] { 0, 0 }));
+		knn.add(new FeatureVector(y, new float[] { 20, 4 }));
+
+		float[] feat = new float[] { 15, 0.5f };
+		KNNClass z = knn.classify(new FeatureVector(null, feat), 1);
+
+		assertEquals(x, z);
 	}
 
 }
