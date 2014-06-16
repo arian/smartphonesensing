@@ -42,6 +42,10 @@ public class MainActivity extends Activity {
 	private static final double DISTANCE_TOLERANCE = 40.0;
 	private static final double ORIENTATION_TOLERANCE = 10.0;
 
+	private static final double USER_ROTATION_NOISE = 0.05; // radians
+	private static final double USER_MOVE_SPEED = 1.0; // meters / second
+	private static final double USER_MOVE_NOISE = 0.1;
+
 	private final String TAG = "FollowBot";
 
 	private final CameraEstimator cameraEstimation = new CameraEstimator();
@@ -63,25 +67,12 @@ public class MainActivity extends Activity {
 	private float yaw;
 
 	private boolean initialMeasurement;
+	private double pYaw = Double.MIN_VALUE;
 
 	private final Periodical measurePeriodical = new Periodical() {
-
-		private double pYaw = Double.MIN_VALUE;
-
 		@Override
 		public void run(long millis) {
-			detectActivity();
-
-			if (pYaw != Double.MIN_VALUE) {
-				double diff = pYaw - yaw;
-
-				// aplies to distance particle filter
-				filter.userRotate(diff, 0.1);
-			}
-			pYaw = yaw;
-
-			// control robot
-			robotControl();
+			senseUserActivity(millis);
 		}
 	};
 
@@ -147,7 +138,7 @@ public class MainActivity extends Activity {
 
 		plotView = new ScatterPlotView(this);
 
-		filter = new Filter().fill(1000, 0);
+		filter = new Filter().fill(1000, 10);
 
 		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
 
@@ -168,8 +159,26 @@ public class MainActivity extends Activity {
 			orienCalc.resume();
 		}
 
-		measurePeriodical.start(100);
-		plotPeriodical.start(100);
+		measurePeriodical.start(500);
+		plotPeriodical.start(500);
+
+		// simulate heading measurement
+		new Periodical() {
+			@Override
+			public void run(long millis) {
+				filter.headingMeasurement(0.0, 0.05);
+				filter.resample();
+			}
+		}.delay(4000);
+
+		// simulate distance measurement
+		new Periodical() {
+			@Override
+			public void run(long millis) {
+				filter.distanceMeasurement(6, 0.5);
+				filter.resample();
+			}
+		}.delay(6000);
 	}
 
 	@Override
@@ -214,17 +223,18 @@ public class MainActivity extends Activity {
 			cameraEstimation.setViewMode(CameraEstimator.VIEW_MODE_OD_RGBA);
 			break;
 		case R.id.action_cal_stand:
-			onClickCalibrate(standClass,
+			calibrateActivity(standClass,
 					getString(R.string.toast_stand_finished));
 			break;
 		case R.id.action_cal_walk:
-			onClickCalibrate(walkClass, getString(R.string.toast_walk_finished));
+			calibrateActivity(walkClass,
+					getString(R.string.toast_walk_finished));
 			break;
 		}
 		return true;
 	}
 
-	private void onClickCalibrate(final KNNClass klass, final CharSequence msg) {
+	private void calibrateActivity(final KNNClass klass, final CharSequence msg) {
 		final int calibrationTime = 4;
 		final AccelerometerCalibration cal = new AccelerometerCalibration(
 				accel, calibrationTime);
@@ -244,10 +254,15 @@ public class MainActivity extends Activity {
 	}
 
 	public void onClickDetectActivity(View view) {
-		detectActivity();
+		detectActivity(0);
 	}
 
-	public void detectActivity() {
+	public void senseUserActivity(long millis) {
+		detectActivity(millis);
+		senseUserRotate();
+	}
+
+	public void detectActivity(long millis) {
 		FeatureVector feature = new FeatureVector(null,
 				FeatureExtractor.extractFeaturesFromFloat4(accelStack));
 		KNNClass klass = knn.classify(feature, 1);
@@ -256,7 +271,21 @@ public class MainActivity extends Activity {
 			Log.d(TAG, klass.getName());
 			TextView tv = (TextView) findViewById(R.id.activity_output);
 			tv.setText(klass.getName());
+
+			if (millis != 0 && klass == walkClass) {
+				filter.userMove(1000 / millis * USER_MOVE_SPEED,
+						USER_MOVE_NOISE);
+			}
 		}
+	}
+
+	public void senseUserRotate() {
+		if (pYaw != Double.MIN_VALUE) {
+			double diff = pYaw - yaw;
+			// applies to particle filter
+			filter.userRotate(diff, USER_ROTATION_NOISE);
+		}
+		pYaw = yaw;
 	}
 
 	public void robotControl() {

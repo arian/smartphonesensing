@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.view.View;
@@ -44,17 +45,14 @@ public class ScatterPlotView extends View {
 		double[] y = data[1];
 		double[] w = data[2];
 
-		double minX = Float.MAX_VALUE;
-		double maxX = Float.MIN_VALUE;
-		double minY = Float.MAX_VALUE;
-		double maxY = Float.MIN_VALUE;
+		double max = Float.MIN_VALUE;
 
 		for (int i = 0; i < x.length; i++) {
-			minX = Math.min(minX, x[i]);
-			maxX = Math.max(maxX, x[i]);
-			minY = Math.min(minY, y[i]);
-			maxY = Math.max(maxY, y[i]);
+			max = Math.max(max, Math.abs(x[i]));
+			max = Math.max(max, Math.abs(y[i]));
 		}
+
+		double min = 0 - max;
 
 		createShapes(x.length);
 
@@ -63,12 +61,27 @@ public class ScatterPlotView extends View {
 
 		int i = 0;
 		for (ShapeDrawable md : mDrawables) {
-			int _x = (int) ((x[i] - minX) / (maxX - minX) * width);
-			int _y = (int) ((y[i] - minY) / (maxY - minY) * height);
+			int _x = (int) ((x[i] - min) / (max - min) * width);
+			int _y = (int) ((y[i] - min) / (max - min) * height);
 			md.setBounds(_x, _y, _x + 10, _y + 10);
+			md.getPaint().setColor(blend(0xff74AC23, Color.BLACK, w[i]));
 			i++;
 		}
 
 		invalidate();
 	}
+
+	static int blend(int color1, int color2, double frac) {
+		int r1 = Color.red(color1);
+		int g1 = Color.green(color1);
+		int b1 = Color.blue(color1);
+		int r2 = Color.red(color2);
+		int g2 = Color.green(color2);
+		int b2 = Color.blue(color2);
+		int r3 = (int) (r1 * (1.0 - frac) + r2 * frac);
+		int g3 = (int) (g1 * (1.0 - frac) + g2 * frac);
+		int b3 = (int) (b1 * (1.0 - frac) + b2 * frac);
+		return Color.rgb(r3, g3, b3);
+	}
+
 }

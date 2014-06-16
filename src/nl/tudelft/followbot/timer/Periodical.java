@@ -4,7 +4,7 @@ import android.os.Handler;
 
 public class Periodical {
 
-	long startTime;
+	long previousTime;
 	long period;
 	boolean delay;
 
@@ -14,7 +14,8 @@ public class Periodical {
 		@Override
 		public void run() {
 			long time = System.currentTimeMillis();
-			Periodical.this.run(time - startTime);
+			Periodical.this.run(time - previousTime);
+			previousTime = time;
 			if (delay) {
 				end();
 			} else {
@@ -33,7 +34,7 @@ public class Periodical {
 		}
 		period = p;
 		delay = d;
-		startTime = System.currentTimeMillis();
+		previousTime = System.currentTimeMillis();
 		timerHandler.postDelayed(timerRunnable, d ? p : 0);
 	}
 
