@@ -1,5 +1,7 @@
 package nl.tudelft.followbot;
 
+import ioio.lib.util.android.IOIOActivity;
+
 import java.util.Observable;
 import java.util.Observer;
 
@@ -9,6 +11,7 @@ import nl.tudelft.followbot.data.DataStack;
 import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.filters.particle.Filter;
 import nl.tudelft.followbot.filters.particle.Particles;
+import nl.tudelft.followbot.ioio.IOIOLoop;
 import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
@@ -23,7 +26,6 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
-import android.app.Activity;
 import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
@@ -37,7 +39,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity {
+public class MainActivity extends IOIOActivity {
 
 	private static final double REFERENCE_DISTANCE = 150.0;
 	private static final double DISTANCE_TOLERANCE = 40.0;
@@ -70,31 +72,35 @@ public class MainActivity extends Activity {
 
 	private boolean initialMeasurement;
 
+	@Override
+	protected IOIOLoop createIOIOLooper() {
+		return new IOIOLoop();
+	}
+
 	private final Periodical measurePeriodical = new Periodical() {
 
-		private double pYaw = Double.MIN_VALUE;
+		private final double pYaw = Double.MIN_VALUE;
 
 		@Override
 		public void run(long millis) {
-			detectActivity();
-
-			if (pYaw != Double.MIN_VALUE) {
-				double diff = pYaw - yaw;
-
-				// aplies to distance particle filter
-				distancePF.userRotate(diff);
-			}
-			pYaw = yaw;
+			/*
+			 * detectActivity();
+			 * 
+			 * if (pYaw != Double.MIN_VALUE) { double diff = pYaw - yaw;
+			 * 
+			 * // aplies to distance particle filter
+			 * distancePF.userRotate(diff); } pYaw = yaw;
+			 */
 
 			// control robot
-			robotControl();
+			// robotControl();
 		}
 	};
 
 	private final Periodical plotPeriodical = new Periodical() {
 		@Override
 		public void run(long millis) {
-			plotView.plot(distancePF.getPositions());
+			// plotView.plot(distancePF.getPositions());
 		}
 	};
 
