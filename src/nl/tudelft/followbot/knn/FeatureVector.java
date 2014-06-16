@@ -1,5 +1,6 @@
 package nl.tudelft.followbot.knn;
 
+
 public class FeatureVector {
 
 	private final KNNClass clazz;
@@ -27,9 +28,9 @@ public class FeatureVector {
 			if (div == 0) {
 				div = 1;
 			}
-			float x = features[i] - min[i];
-			float y = ofeatures[i] - min[i];
-			float a = x / div - y / div;
+			float x = (features[i] - min[i]) / div;
+			float y = (ofeatures[i] - min[i]) / div;
+			float a = x - y;
 			dist += a * a;
 		}
 		return dist;

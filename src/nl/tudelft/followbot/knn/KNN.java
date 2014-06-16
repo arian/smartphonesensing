@@ -57,4 +57,8 @@ public class KNN {
 
 		return maxClass;
 	}
+
+	public ArrayList<FeatureVector> getFeatures() {
+		return features;
+	}
 }

@@ -1,5 +1,6 @@
 package nl.tudelft.followbot;
 
+import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -27,7 +28,6 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -50,7 +50,7 @@ public class MainActivity extends Activity {
 
 	private final CameraEstimator cameraEstimation = new CameraEstimator();
 
-	private final DataStack<float[]> accelStack = new DataStack<float[]>(512);
+	private final DataStack<float[]> accelStack = new DataStack<float[]>(128);
 
 	private LinearAccelerometer accel;
 	private OrientationCalculator orienCalc;
@@ -59,8 +59,8 @@ public class MainActivity extends Activity {
 	private final KNNClass walkClass = new KNNClass("walk");
 	private final KNN knn = new KNN();
 
-	// PlotAChartEngine plotter;
 	private ScatterPlotView plotView;
+	private boolean plotKNN = false;
 
 	private Filter filter;
 
@@ -77,9 +77,23 @@ public class MainActivity extends Activity {
 	};
 
 	private final Periodical plotPeriodical = new Periodical() {
+
+		public double[][] getKNNData() {
+			ArrayList<FeatureVector> fs = knn.getFeatures();
+			double[][] d = new double[3][fs.size()];
+			int i = 0;
+			for (FeatureVector f : fs) {
+				float[] values = f.getFeatures();
+				d[0][i] = values[0];
+				d[0][i] = values[1];
+				d[0][i++] = (f.getKNNClass() == walkClass) ? 1 : 0;
+			}
+			return d;
+		}
+
 		@Override
 		public void run(long millis) {
-			plotView.plot(filter.getPositions());
+			plotView.plot(plotKNN ? getKNNData() : filter.getPositions());
 		}
 	};
 
@@ -230,6 +244,9 @@ public class MainActivity extends Activity {
 			calibrateActivity(walkClass,
 					getString(R.string.toast_walk_finished));
 			break;
+		case R.id.action_switch_plot:
+			plotKNN = !plotKNN;
+			break;
 		}
 		return true;
 	}
@@ -265,10 +282,9 @@ public class MainActivity extends Activity {
 	public void detectActivity(long millis) {
 		FeatureVector feature = new FeatureVector(null,
 				FeatureExtractor.extractFeaturesFromFloat4(accelStack));
-		KNNClass klass = knn.classify(feature, 1);
+		KNNClass klass = knn.classify(feature, 3);
 
 		if (klass != null) { // if there was no calibration before
-			Log.d(TAG, klass.getName());
 			TextView tv = (TextView) findViewById(R.id.activity_output);
 			tv.setText(klass.getName());
 

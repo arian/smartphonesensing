@@ -1,5 +1,6 @@
 package nl.tudelft.followbot.data;
 
+
 public class FeatureExtractor {
 
 	private final DataStack<Float> data;
@@ -13,11 +14,13 @@ public class FeatureExtractor {
 					// when counting zero crossings
 					@Override
 					public DataStack<Float> reduce(float[] x, DataStack<Float> d) {
+
 						if (x.length >= 4 && x[0] >= since) {
 							// Multiply with the sign of the vertical
 							// axis, so it can count the zero crossings
-							d.push((x[1] * x[1] + x[2] * x[2] + x[3] * x[3])
-									* Math.signum(x[2]));
+							float v = (x[1] * x[1] + x[2] * x[2] + x[3] * x[3])
+									* Math.signum(x[2]);
+							d.push(v);
 						}
 						return d;
 					}
@@ -33,16 +36,18 @@ public class FeatureExtractor {
 
 			if (last.length > 0 && first.length > 0) {
 
-				long calTime = ((long) last[0]) - ((long) first[0]);
+				int time = (int) ((((long) last[0]) - ((long) first[0])) / 1e9);
 
-				if (calTime > 0) {
+				if (time > 0) {
 					FeatureExtractor f = FeatureExtractor.fromFloat4(data, 0);
 
 					// Scale zero crossings so it has more or less the same
 					// range
 					// as the power
-					return new float[] { f.zeroCrossings() / calTime * 500,
-							f.avgPower() };
+					float[] vs = new float[] {
+							((float) f.zeroCrossings()) / time, f.avgPower() };
+
+					return vs;
 				}
 			}
 		}
