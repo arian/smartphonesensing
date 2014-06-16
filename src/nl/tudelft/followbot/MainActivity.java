@@ -1,5 +1,6 @@
 package nl.tudelft.followbot;
 
+import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -8,7 +9,6 @@ import nl.tudelft.followbot.camera.CameraEstimator;
 import nl.tudelft.followbot.data.DataStack;
 import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.filters.particle.Filter;
-import nl.tudelft.followbot.filters.particle.Particles;
 import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
@@ -28,7 +28,6 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -43,11 +42,15 @@ public class MainActivity extends Activity {
 	private static final double DISTANCE_TOLERANCE = 40.0;
 	private static final double ORIENTATION_TOLERANCE = 10.0;
 
+	private static final double USER_ROTATION_NOISE = 0.05; // radians
+	private static final double USER_MOVE_SPEED = 1.0; // meters / second
+	private static final double USER_MOVE_NOISE = 0.1;
+
 	private final String TAG = "FollowBot";
 
 	private final CameraEstimator cameraEstimation = new CameraEstimator();
 
-	private final DataStack<float[]> accelStack = new DataStack<float[]>(512);
+	private final DataStack<float[]> accelStack = new DataStack<float[]>(128);
 
 	private LinearAccelerometer accel;
 	private OrientationCalculator orienCalc;
@@ -56,45 +59,41 @@ public class MainActivity extends Activity {
 	private final KNNClass walkClass = new KNNClass("walk");
 	private final KNN knn = new KNN();
 
-	// PlotAChartEngine plotter;
 	private ScatterPlotView plotView;
+	private boolean plotKNN = false;
 
-	// private Filter filter;
+	private Filter filter;
 
 	private float yaw;
 
-	private Filter distancePF;
-	private Filter orientationPF;
-	private Particles distancePrior;
-	private Particles orientationPrior;
-
 	private boolean initialMeasurement;
+	private double pYaw = Double.MIN_VALUE;
 
 	private final Periodical measurePeriodical = new Periodical() {
-
-		private double pYaw = Double.MIN_VALUE;
-
 		@Override
 		public void run(long millis) {
-			detectActivity();
-
-			if (pYaw != Double.MIN_VALUE) {
-				double diff = pYaw - yaw;
-
-				// aplies to distance particle filter
-				distancePF.userRotate(diff);
-			}
-			pYaw = yaw;
-
-			// control robot
-			robotControl();
+			senseUserActivity(millis);
 		}
 	};
 
 	private final Periodical plotPeriodical = new Periodical() {
+
+		public double[][] getKNNData() {
+			ArrayList<FeatureVector> fs = knn.getFeatures();
+			double[][] d = new double[3][fs.size()];
+			int i = 0;
+			for (FeatureVector f : fs) {
+				float[] values = f.getFeatures();
+				d[0][i] = values[0];
+				d[0][i] = values[1];
+				d[0][i++] = (f.getKNNClass() == walkClass) ? 1 : 0;
+			}
+			return d;
+		}
+
 		@Override
 		public void run(long millis) {
-			plotView.plot(distancePF.getPositions());
+			plotView.plot(plotKNN ? getKNNData() : filter.getPositions());
 		}
 	};
 
@@ -153,8 +152,7 @@ public class MainActivity extends Activity {
 
 		plotView = new ScatterPlotView(this);
 
-		distancePF = new Filter(5000, 1000);
-		orientationPF = new Filter(5000, 0);
+		filter = new Filter().fill(1000, 10);
 
 		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
 
@@ -175,8 +173,26 @@ public class MainActivity extends Activity {
 			orienCalc.resume();
 		}
 
-		measurePeriodical.start(100);
-		plotPeriodical.start(100);
+		measurePeriodical.start(500);
+		plotPeriodical.start(500);
+
+		// simulate heading measurement
+		new Periodical() {
+			@Override
+			public void run(long millis) {
+				filter.headingMeasurement(0.0, 0.05);
+				filter.resample();
+			}
+		}.delay(4000);
+
+		// simulate distance measurement
+		new Periodical() {
+			@Override
+			public void run(long millis) {
+				filter.distanceMeasurement(6, 0.5);
+				filter.resample();
+			}
+		}.delay(6000);
 	}
 
 	@Override
@@ -221,17 +237,21 @@ public class MainActivity extends Activity {
 			cameraEstimation.setViewMode(CameraEstimator.VIEW_MODE_OD_RGBA);
 			break;
 		case R.id.action_cal_stand:
-			onClickCalibrate(standClass,
+			calibrateActivity(standClass,
 					getString(R.string.toast_stand_finished));
 			break;
 		case R.id.action_cal_walk:
-			onClickCalibrate(walkClass, getString(R.string.toast_walk_finished));
+			calibrateActivity(walkClass,
+					getString(R.string.toast_walk_finished));
+			break;
+		case R.id.action_switch_plot:
+			plotKNN = !plotKNN;
 			break;
 		}
 		return true;
 	}
 
-	private void onClickCalibrate(final KNNClass klass, final CharSequence msg) {
+	private void calibrateActivity(final KNNClass klass, final CharSequence msg) {
 		final int calibrationTime = 4;
 		final AccelerometerCalibration cal = new AccelerometerCalibration(
 				accel, calibrationTime);
@@ -251,19 +271,37 @@ public class MainActivity extends Activity {
 	}
 
 	public void onClickDetectActivity(View view) {
-		detectActivity();
+		detectActivity(0);
 	}
 
-	public void detectActivity() {
+	public void senseUserActivity(long millis) {
+		detectActivity(millis);
+		senseUserRotate();
+	}
+
+	public void detectActivity(long millis) {
 		FeatureVector feature = new FeatureVector(null,
 				FeatureExtractor.extractFeaturesFromFloat4(accelStack));
-		KNNClass klass = knn.classify(feature, 1);
+		KNNClass klass = knn.classify(feature, 3);
 
 		if (klass != null) { // if there was no calibration before
-			Log.d(TAG, klass.getName());
 			TextView tv = (TextView) findViewById(R.id.activity_output);
 			tv.setText(klass.getName());
+
+			if (millis != 0 && klass == walkClass) {
+				filter.userMove(1000 / millis * USER_MOVE_SPEED,
+						USER_MOVE_NOISE);
+			}
 		}
+	}
+
+	public void senseUserRotate() {
+		if (pYaw != Double.MIN_VALUE) {
+			double diff = pYaw - yaw;
+			// applies to particle filter
+			filter.userRotate(diff, USER_ROTATION_NOISE);
+		}
+		pYaw = yaw;
 	}
 
 	public void robotControl() {
@@ -277,20 +315,15 @@ public class MainActivity extends Activity {
 			if (initialMeasurement) {
 				/* measure */
 				// camera distance measurement with 0.1 [m] deviation
-				distancePF.distanceMeasurement(
+				filter.distanceMeasurement(
 						cameraEstimation.getDistanceUserRobot(), 0.1);
 
 				// camera orientation measurement with 10 [deg] deviation
-				orientationPF.orientationMeasurement(
+				filter.orientationMeasurement(
 						cameraEstimation.getAngleOrientation(), 10);
 
-				// get prior
-				distancePrior = distancePF.getParticles();
-				orientationPrior = orientationPF.getParticles();
-
 				/* resample */
-				distancePF.resample();
-				orientationPF.resample();
+				filter.resample();
 
 				// initial measurement complete
 				initialMeasurement = false;
@@ -299,7 +332,7 @@ public class MainActivity extends Activity {
 				// TODO: apply user movement + IOIO commands
 
 				// move forward if too far (ON-OFF controller)
-				if (distancePF.getDistanceEstimate() > REFERENCE_DISTANCE
+				if (filter.getDistanceEstimate() > REFERENCE_DISTANCE
 						+ DISTANCE_TOLERANCE) {
 					// IOIO motor control (make robot go forward)
 
@@ -307,54 +340,45 @@ public class MainActivity extends Activity {
 					// instant, we can update the particles in the filter
 					// E.g.: if we sample every 100 ms -> robot moves 10 cm in
 					// that time
-					distancePF.robotMove(10, 2);
+					filter.robotMove(10, 2);
 				}
 
-				// rotate if orientation is not good
-				double orientationEstimate = orientationPF
-						.getOrientationEstimate();
+				// rotate if orientation is not good double
+				// orientationEstimate = filter.getOrientationEstimate();
 
 				// ON-OFF control again
-				if ((Math.abs(orientationEstimate) > ORIENTATION_TOLERANCE)) {
-					// if the robot is pointing towards the right -> make it
-					// turn left; otherwise -> make it turn right
-					if (orientationEstimate < 0) {
-						// IOIO motor control (rotate robot)
-
-						// Same as with moving forward: we know how much it
-						// turns between samples -> we can update particles:
-						// 10 degrees per sample
-						orientationPF.robotRotate(10, 2);
-					} else {
-						// IOIO motor control (rotate robot)
-
-						// Same as with moving forward: we know how much it
-						// turns between samples -> we can update particles:
-						// -10 degrees per sample
-						orientationPF.robotRotate(-10, 2);
-					}
-				}
+				// if ((Math.abs(orientationEstimate) > ORIENTATION_TOLERANCE))
+				// {
+				// // if the robot is pointing towards the right -> make it
+				// // turn left; otherwise -> make it turn right
+				// if (orientationEstimate < 0) {
+				// // IOIO motor control (rotate robot)
+				//
+				// // Same as with moving forward: we know how much it
+				// // turns between samples -> we can update particles:
+				// // 10 degrees per sample
+				// orientationPF.robotRotate(10, 2);
+				// } else {
+				// // IOIO motor control (rotate robot)
+				//
+				// // Same as with moving forward: we know how much it
+				// // turns between samples -> we can update particles:
+				// // -10 degrees per sample
+				// orientationPF.robotRotate(-10, 2);
+				// }
+				// }
 
 				/* measure */
 				// camera distance measurement with 30 [cm] deviation
-				distancePF.distanceMeasurement(
+				filter.distanceMeasurement(
 						cameraEstimation.getDistanceUserRobot(), 30);
 
 				// camera orientation measurement with 10 [deg] deviation
-				orientationPF.orientationMeasurement(
+				filter.orientationMeasurement(
 						cameraEstimation.getAngleOrientation(), 10);
 
-				// multiply with prior
-				distancePF.multiplyPrior(distancePrior);
-				orientationPF.multiplyPrior(orientationPrior);
-
-				// update prior
-				distancePrior = distancePF.getParticles();
-				orientationPrior = orientationPF.getParticles();
-
 				/* resample */
-				distancePF.resample();
-				orientationPF.resample();
+				filter.resample();
 			}
 		}
 		// robot is not seen by the camera anymore -> use movement

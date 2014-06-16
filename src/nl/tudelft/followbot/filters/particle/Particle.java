@@ -37,28 +37,40 @@ public class Particle {
 		w = weight;
 	}
 
-	public void setX(double xp) {
+	public Particle setX(double xp) {
 		x = xp;
+		return this;
 	}
 
 	public double getX() {
 		return x;
 	}
 
-	public void setY(double yp) {
+	public Particle setY(double yp) {
 		y = yp;
+		return this;
 	}
 
 	public double getY() {
 		return y;
 	}
 
-	public void setOrientation(double orientation) {
+	public Particle setOrientation(double orientation) {
 		a = orientation;
+		// Make sure a is in (-pi, pi]
+		if (a > Math.PI)
+			a -= Math.PI * 2;
+		else if (a <= -Math.PI)
+			a += Math.PI * 2;
+		return this;
 	}
 
 	public double getOrientation() {
 		return a;
+	}
+
+	public Particle setXYO(double x, double y, double o) {
+		return setX(x).setY(y).setOrientation(o);
 	}
 
 	public double distanceToSquare(double x, double y) {
@@ -71,6 +83,10 @@ public class Particle {
 		return Math.sqrt(distanceToSquare(0, 0));
 	}
 
+	public double angleToOrigin() {
+		return (Math.atan2(y, x) - Math.atan2(0, 1));
+	}
+
 	@Override
 	public Particle clone() {
 		Particle clone = new Particle(x, y, a);
@@ -80,6 +96,11 @@ public class Particle {
 	@Override
 	public String toString() {
 		return "(" + x + "," + y + "," + a + ")";
+	}
+
+	public String toRoundString() {
+		return "(" + Math.round(x) + "," + Math.round(y) + ","
+				+ Math.round(a * 180 / Math.PI) + ")";
 	}
 
 }

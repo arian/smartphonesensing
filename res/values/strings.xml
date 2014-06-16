@@ -7,6 +7,7 @@
     <string name="action_detection_rgba">Object Detection RGBA</string>
     <string name="action_cal_stand">Calibrate Stand</string>
     <string name="action_cal_walk">Calibrate Walk</string>
+    <string name="action_switch_plot">Switch Plot</string>
     <string name="toast_stand_finished">Stand Calibration Finished</string>
     <string name="toast_walk_finished">Walk Calibration Finished</string>
     <string name="btn_detect_activity">Detect Activity</string>

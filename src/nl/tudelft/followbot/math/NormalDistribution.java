@@ -3,7 +3,7 @@ package nl.tudelft.followbot.math;
 import static nl.tudelft.followbot.math.ErrorFunction.erf;
 import static nl.tudelft.followbot.math.ErrorFunction.inverseErf;
 
-public class NormalDistribution {
+public class NormalDistribution implements IDistribution {
 
 	/**
 	 * Probability density function
@@ -13,7 +13,8 @@ public class NormalDistribution {
 	 * @param x
 	 * @return
 	 */
-	public static double getDensity(double mean, double sigma, double x) {
+	@Override
+	public double getDensity(double mean, double sigma, double x) {
 		double exp = (x - mean) / sigma;
 		exp = -0.5 * exp * exp;
 		return 1 / (sigma * Math.sqrt(2)) * Math.pow(Math.E, exp);
@@ -27,7 +28,7 @@ public class NormalDistribution {
 	 * @param x
 	 * @return
 	 */
-	public static double getProbability(double mean, double sigma, double x) {
+	public double getProbability(double mean, double sigma, double x) {
 		return 0.5 * (1 + erf((x - mean) / (sigma * Math.sqrt(2))));
 	}
 
@@ -39,7 +40,8 @@ public class NormalDistribution {
 	 * @param p
 	 * @return
 	 */
-	public static double getQuantile(double mean, double sigma, double p) {
+	@Override
+	public double getQuantile(double mean, double sigma, double p) {
 		return mean + sigma * Math.sqrt(2) * inverseErf(2 * p - 1);
 	}
 
