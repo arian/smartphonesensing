@@ -18,6 +18,11 @@ public class KNN {
 		features.add(feature);
 	}
 
+	public void clear() {
+		features.clear();
+		min = max = null;
+	}
+
 	public KNNClass classify(final FeatureVector feature, int n) {
 
 		KNNClass maxClass = null;
@@ -61,4 +66,13 @@ public class KNN {
 	public ArrayList<FeatureVector> getFeatures() {
 		return features;
 	}
+
+	public float[][] getNormalizedFeatures() {
+		float[][] d = new float[features.size()][2];
+		for (int i = 0; i < features.size(); i++) {
+			d[i] = features.get(i).getNormalizedValues(min, max);
+		}
+		return d;
+	}
+
 }

@@ -1,6 +1,5 @@
 package nl.tudelft.followbot.knn;
 
-
 public class FeatureVector {
 
 	private final KNNClass clazz;
@@ -66,6 +65,22 @@ public class FeatureVector {
 		}
 
 		return m;
+	}
+
+	public float[] getNormalizedValues(float[] min, float[] max) {
+		float[] f = new float[features.length];
+		for (int i = 0; i < features.length; i++) {
+			if (i < min.length && i < max.length) {
+				float div = max[i] - min[i];
+				if (div == 0) {
+					div = 1;
+				}
+				f[i] = (features[i] - min[i]) / div;
+			} else {
+				f[i] = features[i];
+			}
+		}
+		return f;
 	}
 
 }

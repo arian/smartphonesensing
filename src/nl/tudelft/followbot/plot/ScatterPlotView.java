@@ -32,8 +32,8 @@ public class ScatterPlotView extends View {
 				mDrawables.add(mDrawable);
 			}
 		} else if (mDrawables.size() > length) {
-			for (int i = length; i < mDrawables.size(); i++) {
-				mDrawables.remove(i);
+			while (mDrawables.size() > length && mDrawables.size() > 0) {
+				mDrawables.remove(mDrawables.size() - 1);
 			}
 		}
 	}
@@ -63,7 +63,7 @@ public class ScatterPlotView extends View {
 		for (ShapeDrawable md : mDrawables) {
 			int _x = (int) ((x[i] - min) / (max - min) * width);
 			int _y = (int) ((y[i] - min) / (max - min) * height);
-			md.setBounds(_x, _y, _x + 10, _y + 10);
+			md.setBounds(_x - 5, _y - 5, _x + 5, _y + 5);
 			md.getPaint().setColor(blend(0xff74AC23, Color.BLACK, w[i]));
 			i++;
 		}

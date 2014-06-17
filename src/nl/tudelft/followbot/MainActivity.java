@@ -79,14 +79,14 @@ public class MainActivity extends Activity {
 	private final Periodical plotPeriodical = new Periodical() {
 
 		public double[][] getKNNData() {
-			ArrayList<FeatureVector> fs = knn.getFeatures();
-			double[][] d = new double[3][fs.size()];
-			int i = 0;
-			for (FeatureVector f : fs) {
-				float[] values = f.getFeatures();
-				d[0][i] = values[0];
-				d[0][i] = values[1];
-				d[0][i++] = (f.getKNNClass() == walkClass) ? 1 : 0;
+			float[][] fs = knn.getNormalizedFeatures();
+			ArrayList<FeatureVector> fvs = knn.getFeatures();
+			double[][] d = new double[3][fs.length];
+			for (int i = 0; i < fs.length; i++) {
+				float[] f = fs[i];
+				d[0][i] = f[0];
+				d[1][i] = f[1];
+				d[2][i] = (fvs.get(i).getKNNClass() == walkClass) ? 1 : 0;
 			}
 			return d;
 		}
@@ -152,7 +152,7 @@ public class MainActivity extends Activity {
 
 		plotView = new ScatterPlotView(this);
 
-		filter = new Filter().fill(1000, 10);
+		filter = new Filter().fill(10, 10);
 
 		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
 
@@ -244,6 +244,8 @@ public class MainActivity extends Activity {
 			calibrateActivity(walkClass,
 					getString(R.string.toast_walk_finished));
 			break;
+		case R.id.action_clear_cal:
+			knn.clear();
 		case R.id.action_switch_plot:
 			plotKNN = !plotKNN;
 			break;
