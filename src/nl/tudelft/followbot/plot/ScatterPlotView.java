@@ -64,7 +64,7 @@ public class ScatterPlotView extends View {
 			int _x = (int) ((x[i] - min) / (max - min) * width);
 			int _y = (int) ((y[i] - min) / (max - min) * height);
 			md.setBounds(_x - 5, _y - 5, _x + 5, _y + 5);
-			md.getPaint().setColor(blend(0xff74AC23, Color.BLACK, w[i]));
+			md.getPaint().setColor(blend(0xff74AC23, Color.MAGENTA, w[i]));
 			i++;
 		}
 
