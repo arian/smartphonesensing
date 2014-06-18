@@ -28,6 +28,7 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,13 +39,15 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-	private static final double REFERENCE_DISTANCE = 150.0;
-	private static final double DISTANCE_TOLERANCE = 40.0;
-	private static final double ORIENTATION_TOLERANCE = 10.0;
+	private static final double MEASURE_DISTANCE_NOISE = 0.10;
+	private static final double MEASURE_HEADING_NOISE = 0.10;
 
 	private static final double USER_ROTATION_NOISE = 0.05; // radians
 	private static final double USER_MOVE_SPEED = 1.0; // meters / second
 	private static final double USER_MOVE_NOISE = 0.1;
+
+	private static final int FILTER_PARTICLES_COUNT = 100;
+	private static final double FILTER_PARTICLES_INITIAL_DISTANCE = 2; // meters
 
 	private final String TAG = "FollowBot";
 
@@ -65,8 +68,6 @@ public class MainActivity extends Activity {
 	private Filter filter;
 
 	private float yaw;
-
-	private boolean initialMeasurement;
 	private double pYaw = Double.MIN_VALUE;
 
 	private final Periodical measurePeriodical = new Periodical() {
@@ -124,6 +125,7 @@ public class MainActivity extends Activity {
 
 		SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
+		// store latest acceleration data
 		accel = new LinearAccelerometer(sm);
 		accel.addListener(new SensorSink() {
 			@Override
@@ -133,6 +135,7 @@ public class MainActivity extends Activity {
 			}
 		});
 
+		// save current orientation/yaw
 		orienCalc = new OrientationCalculator(sm);
 		orienCalc.addObserver(new Observer() {
 			@Override
@@ -145,17 +148,14 @@ public class MainActivity extends Activity {
 		cameraEstimation.openCameraView(
 				(CameraBridgeViewBase) findViewById(R.id.surface_view), 480,
 				360);
-		// first measurement flag
-		initialMeasurement = true;
 
-		// plotter = new PlotAChartEngine(this, );
+		// The partial filter
+		filter = new Filter().fill(FILTER_PARTICLES_COUNT,
+				FILTER_PARTICLES_INITIAL_DISTANCE);
 
+		// plotter
 		plotView = new ScatterPlotView(this);
-
-		filter = new Filter().fill(10, 10);
-
 		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
-
 		layout.addView(plotView);
 	}
 
@@ -176,23 +176,23 @@ public class MainActivity extends Activity {
 		measurePeriodical.start(500);
 		plotPeriodical.start(500);
 
-		// simulate heading measurement
-		new Periodical() {
-			@Override
-			public void run(long millis) {
-				filter.headingMeasurement(0.0, 0.05);
-				filter.resample();
-			}
-		}.delay(4000);
-
-		// simulate distance measurement
-		new Periodical() {
-			@Override
-			public void run(long millis) {
-				filter.distanceMeasurement(6, 0.5);
-				filter.resample();
-			}
-		}.delay(6000);
+		// // simulate heading measurement
+		// new Periodical() {
+		// @Override
+		// public void run(long millis) {
+		// filter.headingMeasurement(0.0, 0.05);
+		// filter.resample();
+		// }
+		// }.delay(4000);
+		//
+		// // simulate distance measurement
+		// new Periodical() {
+		// @Override
+		// public void run(long millis) {
+		// filter.distanceMeasurement(6, 0.5);
+		// filter.resample();
+		// }
+		// }.delay(6000);
 	}
 
 	@Override
@@ -253,6 +253,12 @@ public class MainActivity extends Activity {
 		return true;
 	}
 
+	/**
+	 * Add new data point to the activity detection KNN classifier
+	 * 
+	 * @param klass
+	 * @param msg
+	 */
 	private void calibrateActivity(final KNNClass klass, final CharSequence msg) {
 		final int calibrationTime = 4;
 		final AccelerometerCalibration cal = new AccelerometerCalibration(
@@ -277,6 +283,7 @@ public class MainActivity extends Activity {
 	}
 
 	public void senseUserActivity(long millis) {
+		measureRobot();
 		detectActivity(millis);
 		senseUserRotate();
 	}
@@ -284,13 +291,15 @@ public class MainActivity extends Activity {
 	public void detectActivity(long millis) {
 		FeatureVector feature = new FeatureVector(null,
 				FeatureExtractor.extractFeaturesFromFloat4(accelStack));
+
+		// classify measured values, with KNN classifier. Take 3 points
 		KNNClass klass = knn.classify(feature, 3);
 
-		if (klass != null) { // if there was no calibration before
+		if (klass != null) { // if there was calibration before
 			TextView tv = (TextView) findViewById(R.id.activity_output);
 			tv.setText(klass.getName());
 
-			if (millis != 0 && klass == walkClass) {
+			if (millis > 0 && klass == walkClass) {
 				filter.userMove(1000 / millis * USER_MOVE_SPEED,
 						USER_MOVE_NOISE);
 			}
@@ -306,90 +315,24 @@ public class MainActivity extends Activity {
 		pYaw = yaw;
 	}
 
-	public void robotControl() {
+	public void measureRobot() {
 
 		// if the robot is seen by the camera, then use measurements to
 		// update the particle filter
 		if (cameraEstimation.robotSeen()) {
 
-			// if this is the first measurement, only update the weights,
-			// get the prior and resample
-			if (initialMeasurement) {
-				/* measure */
-				// camera distance measurement with 0.1 [m] deviation
-				filter.distanceMeasurement(
-						cameraEstimation.getDistanceUserRobot(), 0.1);
+			float d = cameraEstimation.getDistanceUserRobot();
+			float a = cameraEstimation.getAngleOrientation();
 
-				// camera orientation measurement with 10 [deg] deviation
-				filter.orientationMeasurement(
-						cameraEstimation.getAngleOrientation(), 10);
+			Log.d(TAG, "-> " + d + " @ " + a);
 
-				/* resample */
-				filter.resample();
+			// camera distance measurement with x [m] deviation
+			filter.distanceMeasurement(d, MEASURE_DISTANCE_NOISE);
+			filter.resample();
 
-				// initial measurement complete
-				initialMeasurement = false;
-			} else {
-				/* move */
-				// TODO: apply user movement + IOIO commands
-
-				// move forward if too far (ON-OFF controller)
-				if (filter.getDistanceEstimate() > REFERENCE_DISTANCE
-						+ DISTANCE_TOLERANCE) {
-					// IOIO motor control (make robot go forward)
-
-					// Knowing the traveled distance of the robot at each time
-					// instant, we can update the particles in the filter
-					// E.g.: if we sample every 100 ms -> robot moves 10 cm in
-					// that time
-					filter.robotMove(10, 2);
-				}
-
-				// rotate if orientation is not good double
-				// orientationEstimate = filter.getOrientationEstimate();
-
-				// ON-OFF control again
-				// if ((Math.abs(orientationEstimate) > ORIENTATION_TOLERANCE))
-				// {
-				// // if the robot is pointing towards the right -> make it
-				// // turn left; otherwise -> make it turn right
-				// if (orientationEstimate < 0) {
-				// // IOIO motor control (rotate robot)
-				//
-				// // Same as with moving forward: we know how much it
-				// // turns between samples -> we can update particles:
-				// // 10 degrees per sample
-				// orientationPF.robotRotate(10, 2);
-				// } else {
-				// // IOIO motor control (rotate robot)
-				//
-				// // Same as with moving forward: we know how much it
-				// // turns between samples -> we can update particles:
-				// // -10 degrees per sample
-				// orientationPF.robotRotate(-10, 2);
-				// }
-				// }
-
-				/* measure */
-				// camera distance measurement with 30 [cm] deviation
-				filter.distanceMeasurement(
-						cameraEstimation.getDistanceUserRobot(), 30);
-
-				// camera orientation measurement with 10 [deg] deviation
-				filter.orientationMeasurement(
-						cameraEstimation.getAngleOrientation(), 10);
-
-				/* resample */
-				filter.resample();
-			}
+			// camera orientation measurement with x [rad] deviation
+			filter.orientationMeasurement(a, MEASURE_HEADING_NOISE);
+			filter.resample();
 		}
-		// robot is not seen by the camera anymore -> use movement
-		// estimations if we already have an initial measurement, otherwise
-		// wait for the user to make one camera measurement
-		else if (!initialMeasurement) {
-			// TODO: apply the movement methods and estimate distance and
-			// orientation
-		}
-
 	}
 }
