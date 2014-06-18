@@ -64,9 +64,17 @@ public class MainActivity extends Activity {
 	 */
 	private static final double USER_MOVE_NOISE = 0.1;
 	/**
+	 * this is the standard deviation of the standing speed.
+	 */
+	private static final double USER_STAND_SPEED = 0.0; // meters / second
+	/**
+	 * this is the standard deviation of the standing speed.
+	 */
+	private static final double USER_STAND_NOISE = 0.01;
+	/**
 	 * Number of particles in the filter
 	 */
-	private static final int FILTER_PARTICLES_COUNT = 5000;
+	private static final int FILTER_PARTICLES_COUNT = 1000;
 	/**
 	 * Initial radius in which the initial particles are distributed
 	 */
@@ -132,8 +140,8 @@ public class MainActivity extends Activity {
 	private final Periodical measurePeriodical = new Periodical() {
 		@Override
 		public void run(long millis) {
-			// measureRobot();
-			// senseUserActivity(millis);
+			measureRobot();
+			senseUserActivity(millis);
 		}
 	};
 	/**
@@ -161,8 +169,6 @@ public class MainActivity extends Activity {
 
 			double distance = filter.getDistanceEstimate();
 			double orientation = filter.getOrientationEstimate();
-
-			// Log.d(TAG, "-» " + distance + " @ " + orientation);
 
 			TextView tv = (TextView) findViewById(R.id.robot_estimation);
 			tv.setText(String
@@ -247,24 +253,24 @@ public class MainActivity extends Activity {
 			orienCalc.resume();
 		}
 
-		measurePeriodical.start(500);
-		plotPeriodical.start(500);
+		measurePeriodical.start(1000);
+		plotPeriodical.start(100);
 
 		// // simulate heading measurement
-		new Periodical() {
-			@Override
-			public void run(long millis) {
-				filter.distanceMeasurement(1.2, MEASURE_DISTANCE_NOISE);
-				filter.resample();
-
-				filter.orientationMeasurement(Math.PI * 2 / 3,
-						MEASURE_ORIENTATION_NOISE);
-				filter.resample();
-
-				filter.headingMeasurement(0, MEASURE_HEADING_NOISE);
-				filter.resample();
-			}
-		}.delay(4000);
+		// new Periodical() {
+		// @Override
+		// public void run(long millis) {
+		// // filter.distanceMeasurement(1.2, MEASURE_DISTANCE_NOISE);
+		// // filter.resample();
+		//
+		// // filter.orientationMeasurement(Math.PI * 2 / 3,
+		// // MEASURE_ORIENTATION_NOISE);
+		// // filter.resample();
+		//
+		// filter.headingMeasurement(0, MEASURE_HEADING_NOISE);
+		// // filter.resample();
+		// }
+		// }.delay(4000);
 
 	}
 
@@ -379,7 +385,12 @@ public class MainActivity extends Activity {
 			if (millis > 0 && klass == walkClass) {
 				filter.userMove(1000 / millis * USER_MOVE_SPEED,
 						USER_MOVE_NOISE);
+				return;
 			}
+		}
+
+		if (millis > 0) {
+			filter.userMove(1000 / millis * USER_STAND_SPEED, USER_STAND_NOISE);
 		}
 	}
 

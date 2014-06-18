@@ -6,8 +6,6 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
-import android.util.Log;
-
 public class CameraEstimator implements CvCameraViewListener2 {
 
 	public static final int VIEW_MODE_RGBA = 0;
@@ -108,8 +106,6 @@ public class CameraEstimator implements CvCameraViewListener2 {
 					THRESH_BLUE_VMIN, THRESH_BLUE_HMAX, THRESH_BLUE_SMAX,
 					THRESH_BLUE_VMAX, width, height, mGray.getNativeObjAddr(),
 					mRgba.getNativeObjAddr(), debug);
-
-			Log.d("FOO", "» " + distance + "      " + orientation);
 
 			break;
 		}
