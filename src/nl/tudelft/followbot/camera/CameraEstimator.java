@@ -38,6 +38,9 @@ public class CameraEstimator implements CvCameraViewListener2 {
 
 	private int robotDetected;
 
+	private float distance;
+	private float orientation;
+
 	private float x1;
 	private float y1;
 	private float r1;
@@ -49,14 +52,6 @@ public class CameraEstimator implements CvCameraViewListener2 {
 	private float x3;
 	private float y3;
 	private float r3;
-
-	private double rvec0;
-	private double rvec1;
-	private double rvec2;
-
-	private double tvec0;
-	private double tvec1;
-	private double tvec2;
 
 	public void enableCamera() {
 		mOpenCvCameraView.enableView();
@@ -114,7 +109,8 @@ public class CameraEstimator implements CvCameraViewListener2 {
 					THRESH_BLUE_VMAX, width, height, mGray.getNativeObjAddr(),
 					mRgba.getNativeObjAddr(), debug);
 
-			Log.d("FOO", "» " + tvec2);
+			Log.d("FOO", "» " + distance + "      " + orientation);
+
 			break;
 		}
 
@@ -140,11 +136,11 @@ public class CameraEstimator implements CvCameraViewListener2 {
 	}
 
 	public float getDistance() {
-		return 10.0f;
+		return distance;
 	}
 
 	public float getOrientation() {
-		return 0.0f;
+		return orientation;
 	}
 
 }

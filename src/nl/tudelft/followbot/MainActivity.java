@@ -42,7 +42,11 @@ public class MainActivity extends Activity {
 	/**
 	 * Standard deviation of a camera distance measurement
 	 */
-	private static final double MEASURE_DISTANCE_NOISE = 0.10;
+	private static final double MEASURE_DISTANCE_NOISE = 0.50;
+	/**
+	 * std dev of the robot orientation measurement in rad
+	 */
+	private static final double MEASURE_ORIENTATION_NOISE = 0.05;
 	/**
 	 * Standard deviation of a camera heading measurement
 	 */
@@ -396,7 +400,7 @@ public class MainActivity extends Activity {
 		// update the particle filter
 		if (cameraEstimation.robotSeen()) {
 
-			float d = cameraEstimation.getDistance();
+			float d = cameraEstimation.getDistance() / 100;
 			float a = cameraEstimation.getOrientation();
 
 			Log.d(TAG, "-> " + d + " @ " + a);
@@ -406,7 +410,10 @@ public class MainActivity extends Activity {
 			filter.resample();
 
 			// camera orientation measurement with x [rad] deviation
-			filter.orientationMeasurement(a, MEASURE_HEADING_NOISE);
+			filter.orientationMeasurement(a, MEASURE_ORIENTATION_NOISE);
+			filter.resample();
+
+			filter.headingMeasurement(0, MEASURE_HEADING_NOISE);
 			filter.resample();
 		}
 	}

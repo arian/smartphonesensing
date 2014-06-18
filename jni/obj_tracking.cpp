@@ -125,50 +125,70 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 
 		line(mRgba, Point((c2[0] + c3[0])/2, (c2[1] + c3[1])/2), Point(c1[0], c1[1]), Scalar(255, 0, 0, 255), 2);
 
-		// Read points
-		vector<Point2f> imagePoints;//
-		imagePoints.push_back(Point2f(c1[0], c1[1]));
-		imagePoints.push_back(Point2f(c2[0], c2[1]));
-		imagePoints.push_back(Point2f(c3[0], c3[1]));
-		imagePoints.push_back(Point2f((c2[0] + c3[0]) / 2, (c2[1] + c3[1]) / 2));
 
-		vector<Point3f> objectPoints = Generate3DPoints();
+		// calculate distance and orientation
 
-		Mat cameraMatrix(3, 3, DataType<double>::type);
-		setIdentity(cameraMatrix);
+		char text[255];
 
-		Mat distCoeffs(4, 1, DataType<double>::type);
-		distCoeffs.at<double>(0) = 0;
-		distCoeffs.at<double>(1) = 0;
-		distCoeffs.at<double>(2) = 0;
-		distCoeffs.at<double>(3) = 0;
+		// Compute slope angle of the line between the two blue markers (robot orientation)
+		float alpha = atan2((c2[1] - c3[1]), (c2[0] - c3[0]));
 
-		Mat rvec(3, 1, DataType<double>::type);
-		Mat tvec(3, 1, DataType<double>::type);
+		// Compute triangle centroid position
+		int centroid_X = c1[0] + ((c2[0] + c3[0]) / 2 - c1[0]) * (2/3);
+		int centroid_Y = c1[1] + ((c2[1] + c3[1]) / 2 - c1[1]) * (2/3);
 
-		solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+		// Compute translation values
+		int translation_X = centroid_X - width / 2;
+		int translation_Y = height / 2 - centroid_Y;
 
-		vector<Point2f> projectedPoints;
-		projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs, projectedPoints);
+		// Phone-robot distance
+		float distance_phone = c1[2];
 
-		for (int i = 0; i < projectedPoints.size(); i++) {
-			circle(mRgba, projectedPoints[i], 20, Scalar(255, 0, 255, 255), 10);
+		// Find the largest radius
+		if (c2[2] > distance_phone) {
+			distance_phone = c2[2];
 		}
+		if (c3[2] > distance_phone) {
+			distance_phone = c3[2];
+		}
+
+		distance_phone = -24.0 / 31.0 * distance_phone + 1995.0 / 31.0;
+
+		// Compute lengths of triangle sides
+		float a = sqrt((c2[0]-c3[0])*(c2[0]-c3[0]) + (c2[1]-c3[1])*(c2[1]-c3[1]));
+		float b = sqrt((c1[0]-c3[0])*(c1[0]-c3[0]) + (c1[1]-c3[1])*(c1[1]-c3[1]));
+		float c = sqrt((c1[0]-c2[0])*(c1[0]-c2[0]) + (c1[1]-c2[1])*(c1[1]-c2[1]));
+
+		// Compute triangle angles
+		float au = acosf(((b*b + c*c - a*a) / (2*b*c))) * (180 / CV_PI);
+		float bu = acosf(((a*a + c*c - b*b) / (2*a*c))) * (180 / CV_PI);
+		float cu = acosf(((b*b + a*a - c*c) / (2*b*a))) * (180 / CV_PI);
+
+		float beta;
+		// Find the largest angle and use it in the linear formula for computing the skew:
+		// beta = -0.75*max_angle + 0.75*180
+		// This gives a decent estimate without the need to calibrate the camera or take pictures of the robot
+		if ((au >= bu) && (au >= cu)) {
+			beta = (-au + 180.0) * 0.75;
+		}
+		else if ((bu >= au) && (bu >= cu)) {
+			beta = (-bu + 180.0) * 0.75;
+		}
+		else if ((cu >= au) && (cu >= bu)) {
+			beta = (-cu + 180.0) * 0.75;
+		}
+
+		// Compute user-robot distance
+		float distance_user = distance_phone * cos(beta * CV_PI / 180);
 
 		// setting class values
 
 		// Set robot detected flag
 		robot_detected = 1;
 
-		// rotation vector
-		SetDoubleField(env, thiz, thisClass, "rvec0", rvec.at<double>(0));
-		SetDoubleField(env, thiz, thisClass, "rvec1", rvec.at<double>(1));
-		SetDoubleField(env, thiz, thisClass, "rvec2", rvec.at<double>(2));
-
-		// translation vector
-		SetDoubleField(env, thiz, thisClass, "tvec0", tvec.at<double>(0));
-		SetDoubleField(env, thiz, thisClass, "tvec1", tvec.at<double>(1));
-		SetDoubleField(env, thiz, thisClass, "tvec2", tvec.at<double>(2));
+		// circle positions and radii
+		SetFloatField(env, thiz, thisClass, "distance", distance_user);
+		SetFloatField(env, thiz, thisClass, "orientation", alpha);
 
 		// circle positions and radii
 		SetFloatField(env, thiz, thisClass, "x1", c1[0]);
