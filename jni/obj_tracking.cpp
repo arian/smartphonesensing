@@ -31,7 +31,7 @@ vector<Point3f> Generate3DPoints()
 	return points;
 }
 
-void SetDoubleField(JNIEnv* env, jobject thiz, jclass thisClass, char const * field, float value) {
+void SetDoubleField(JNIEnv* env, jobject thiz, jclass thisClass, char const * field, double value) {
 	jfieldID fid = env->GetFieldID(thisClass, field, "D");
 	if (fid != NULL) {
 		env->SetDoubleField(thiz, fid, value);
@@ -125,7 +125,6 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 
 		line(mRgba, Point((c2[0] + c3[0])/2, (c2[1] + c3[1])/2), Point(c1[0], c1[1]), Scalar(255, 0, 0, 255), 2);
 
-
 		// calculate distance and orientation
 
 		char text[255];
@@ -187,8 +186,11 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 		robot_detected = 1;
 
 		// circle positions and radii
-		SetFloatField(env, thiz, thisClass, "distance", distance_user);
-		SetFloatField(env, thiz, thisClass, "orientation", alpha);
+		SetDoubleField(env, thiz, thisClass, "distance", (double) distance_user);
+		
+		if (abs(alpha) <= CV_PI / 2) {
+			SetDoubleField(env, thiz, thisClass, "orientation", (double) alpha);
+		}
 
 		// circle positions and radii
 		SetFloatField(env, thiz, thisClass, "x1", c1[0]);

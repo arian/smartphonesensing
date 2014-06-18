@@ -38,8 +38,8 @@ public class CameraEstimator implements CvCameraViewListener2 {
 
 	private int robotDetected;
 
-	private float distance;
-	private float orientation;
+	private double distance;
+	private double orientation;
 
 	private float x1;
 	private float y1;
@@ -135,11 +135,11 @@ public class CameraEstimator implements CvCameraViewListener2 {
 		return (robotDetected == 1);
 	}
 
-	public float getDistance() {
+	public double getDistance() {
 		return distance;
 	}
 
-	public float getOrientation() {
+	public double getOrientation() {
 		return orientation;
 	}
 

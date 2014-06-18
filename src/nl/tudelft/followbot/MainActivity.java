@@ -41,7 +41,7 @@ public class MainActivity extends Activity {
 	/**
 	 * Standard deviation of a camera distance measurement
 	 */
-	private static final double MEASURE_DISTANCE_NOISE = 0.50;
+	private static final double MEASURE_DISTANCE_NOISE = 0.050;
 	/**
 	 * std dev of the robot orientation measurement in rad
 	 */
@@ -66,7 +66,7 @@ public class MainActivity extends Activity {
 	/**
 	 * Number of particles in the filter
 	 */
-	private static final int FILTER_PARTICLES_COUNT = 10;
+	private static final int FILTER_PARTICLES_COUNT = 1000;
 	/**
 	 * Initial radius in which the initial particles are distributed
 	 */
@@ -162,7 +162,7 @@ public class MainActivity extends Activity {
 			double distance = filter.getDistanceEstimate();
 			double orientation = filter.getOrientationEstimate();
 
-			Log.d(TAG, "-» " + distance + " @ " + orientation);
+			// Log.d(TAG, "-» " + distance + " @ " + orientation);
 
 			TextView tv = (TextView) findViewById(R.id.robot_estimation);
 			tv.setText(String
@@ -179,7 +179,6 @@ public class MainActivity extends Activity {
 		public void onManagerConnected(int status) {
 			switch (status) {
 			case LoaderCallbackInterface.SUCCESS:
-				// Log.i(TAG, "OpenCV loaded successfully");
 				// Load native library after(!) OpenCV initialization
 				System.loadLibrary("object_tracking");
 				cameraEstimation.enableCamera();
@@ -406,10 +405,8 @@ public class MainActivity extends Activity {
 		// update the particle filter
 		if (cameraEstimation.robotSeen()) {
 
-			float d = cameraEstimation.getDistance() / 100;
-			float a = cameraEstimation.getOrientation();
-
-			Log.d(TAG, "=> " + d + " @ " + a);
+			double d = cameraEstimation.getDistance() / 100;
+			double a = cameraEstimation.getOrientation();
 
 			// camera distance measurement with x [m] deviation
 			filter.distanceMeasurement(d, MEASURE_DISTANCE_NOISE);
@@ -421,6 +418,11 @@ public class MainActivity extends Activity {
 
 			filter.headingMeasurement(0, MEASURE_HEADING_NOISE);
 			filter.resample();
+
+			Log.d(TAG,
+					"=> " + d + " @ " + a + "-------------"
+							+ filter.getDistanceEstimate() + "@"
+							+ filter.getOrientationEstimate());
 		}
 	}
 
