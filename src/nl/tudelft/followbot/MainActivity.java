@@ -41,15 +41,15 @@ public class MainActivity extends Activity {
 	/**
 	 * Standard deviation of a camera distance measurement
 	 */
-	private static final double MEASURE_DISTANCE_NOISE = 0.050;
+	private static final double MEASURE_DISTANCE_NOISE = 0.2;
 	/**
 	 * std dev of the robot orientation measurement in rad
 	 */
-	private static final double MEASURE_ORIENTATION_NOISE = 0.05;
+	private static final double MEASURE_ORIENTATION_NOISE = 1.5;
 	/**
 	 * Standard deviation of a camera heading measurement
 	 */
-	private static final double MEASURE_HEADING_NOISE = 0.10;
+	private static final double MEASURE_HEADING_NOISE = 0.05;
 	/**
 	 * std dev of the user orientation, which updates the particle filter
 	 */
@@ -66,7 +66,7 @@ public class MainActivity extends Activity {
 	/**
 	 * Number of particles in the filter
 	 */
-	private static final int FILTER_PARTICLES_COUNT = 1000;
+	private static final int FILTER_PARTICLES_COUNT = 5000;
 	/**
 	 * Initial radius in which the initial particles are distributed
 	 */
@@ -132,8 +132,8 @@ public class MainActivity extends Activity {
 	private final Periodical measurePeriodical = new Periodical() {
 		@Override
 		public void run(long millis) {
-			measureRobot();
-			senseUserActivity(millis);
+			// measureRobot();
+			// senseUserActivity(millis);
 		}
 	};
 	/**
@@ -251,22 +251,21 @@ public class MainActivity extends Activity {
 		plotPeriodical.start(500);
 
 		// // simulate heading measurement
-		// new Periodical() {
-		// @Override
-		// public void run(long millis) {
-		// filter.headingMeasurement(0.0, 0.05);
-		// filter.resample();
-		// }
-		// }.delay(4000);
-		//
-		// // simulate distance measurement
-		// new Periodical() {
-		// @Override
-		// public void run(long millis) {
-		// filter.distanceMeasurement(6, 0.5);
-		// filter.resample();
-		// }
-		// }.delay(6000);
+		new Periodical() {
+			@Override
+			public void run(long millis) {
+				filter.distanceMeasurement(1.2, MEASURE_DISTANCE_NOISE);
+				filter.resample();
+
+				filter.orientationMeasurement(Math.PI * 2 / 3,
+						MEASURE_ORIENTATION_NOISE);
+				filter.resample();
+
+				filter.headingMeasurement(0, MEASURE_HEADING_NOISE);
+				filter.resample();
+			}
+		}.delay(4000);
+
 	}
 
 	@Override
