@@ -36,13 +36,27 @@ public class CameraEstimator implements CvCameraViewListener2 {
 
 	private CameraBridgeViewBase mOpenCvCameraView;
 
-	private float distancePhoneRobot = 0;
-	private float distanceUserRobot = 0;
-	private int angleOrientation = 0;
-	private int angleSkew = 0;
-	private int translationHorizontal = 0;
-	private int translationVertical = 0;
-	private int robotDetected = 0;
+	private int robotDetected;
+
+	private float x1;
+	private float y1;
+	private float r1;
+
+	private float x2;
+	private float y2;
+	private float r2;
+
+	private float x3;
+	private float y3;
+	private float r3;
+
+	private double rvec0;
+	private double rvec1;
+	private double rvec2;
+
+	private double tvec0;
+	private double tvec1;
+	private double tvec2;
 
 	public void enableCamera() {
 		mOpenCvCameraView.enableView();
@@ -75,59 +89,43 @@ public class CameraEstimator implements CvCameraViewListener2 {
 
 	@Override
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-		final int viewMode = this.mViewMode;
 
-		switch (viewMode) {
+		switch (mViewMode) {
 		case VIEW_MODE_RGBA:
 			// input frame has RBGA format
 			mRgba = inputFrame.rgba();
 			break;
 		case VIEW_MODE_THRESH:
-			// input frame has RGBA format
-			mRgba = inputFrame.rgba();
-			mGray = inputFrame.gray();
-
-			this.CircleObjectTrack(THRESH_GREEN_HMIN, THRESH_GREEN_SMIN,
-					THRESH_GREEN_VMIN, THRESH_GREEN_HMAX, THRESH_GREEN_SMAX,
-					THRESH_GREEN_VMAX, THRESH_BLUE_HMIN, THRESH_BLUE_SMIN,
-					THRESH_BLUE_VMIN, THRESH_BLUE_HMAX, THRESH_BLUE_SMAX,
-					THRESH_BLUE_VMAX, mRgba.width(), mRgba.height(),
-					mGray.getNativeObjAddr(), mRgba.getNativeObjAddr(), true);
-
-			Log.d("Position",
-					this.getAngleSkew() + " " + this.getAngleOrientation()
-							+ " " + this.getTranslationHorizontal() + " "
-							+ this.getTranslationVertical() + " "
-							+ this.getDistancePhoneRobot() + " "
-							+ this.getDistanceUserRobot() + " " + robotSeen()
-							+ "");
-
-			break;
 		case VIEW_MODE_OD_RGBA:
+
 			// input frame has RGBA format
 			mRgba = inputFrame.rgba();
 			mGray = inputFrame.gray();
 
-			this.CircleObjectTrack(THRESH_GREEN_HMIN, THRESH_GREEN_SMIN,
+			int width = mRgba.width();
+			int height = mRgba.height();
+
+			boolean debug = mViewMode == VIEW_MODE_THRESH;
+
+			CircleObjectTrack(THRESH_GREEN_HMIN, THRESH_GREEN_SMIN,
 					THRESH_GREEN_VMIN, THRESH_GREEN_HMAX, THRESH_GREEN_SMAX,
 					THRESH_GREEN_VMAX, THRESH_BLUE_HMIN, THRESH_BLUE_SMIN,
 					THRESH_BLUE_VMIN, THRESH_BLUE_HMAX, THRESH_BLUE_SMAX,
-					THRESH_BLUE_VMAX, mRgba.width(), mRgba.height(),
-					mGray.getNativeObjAddr(), mRgba.getNativeObjAddr(), false);
+					THRESH_BLUE_VMAX, width, height, mGray.getNativeObjAddr(),
+					mRgba.getNativeObjAddr(), debug);
 
-			Log.d("Position",
-					this.getAngleSkew() + " " + this.getAngleOrientation()
-							+ " " + this.getTranslationHorizontal() + " "
-							+ this.getTranslationVertical() + " "
-							+ this.getDistancePhoneRobot() + " "
-							+ this.getDistanceUserRobot() + " " + robotSeen()
-							+ "");
-
+			Log.d("FOO", "» " + tvec2);
 			break;
 		}
 
 		return mRgba;
 	}
+
+	public native void CircleObjectTrack(int greenHmin, int greenSmin,
+			int greenVmin, int greenHmax, int greenSmax, int greenVmax,
+			int blueHmin, int blueSmin, int blueVmin, int blueHmax,
+			int blueSmax, int blueVmax, int width, int height, long matAddrGr,
+			long matAddrRgba, boolean debug);
 
 	public int getViewMode() {
 		return mViewMode;
@@ -137,38 +135,16 @@ public class CameraEstimator implements CvCameraViewListener2 {
 		mViewMode = mode;
 	}
 
-	public float getDistancePhoneRobot() {
-		return distancePhoneRobot;
-	}
-
-	public float getDistanceUserRobot() {
-		return distanceUserRobot;
-	}
-
-	public int getAngleOrientation() {
-		return angleOrientation;
-	}
-
-	public int getAngleSkew() {
-		return angleSkew;
-	}
-
-	public int getTranslationHorizontal() {
-		return translationHorizontal;
-	}
-
-	public int getTranslationVertical() {
-		return translationVertical;
-	}
-
 	public boolean robotSeen() {
 		return (robotDetected == 1);
 	}
 
-	public native void CircleObjectTrack(int greenHmin, int greenSmin,
-			int greenVmin, int greenHmax, int greenSmax, int greenVmax,
-			int blueHmin, int blueSmin, int blueVmin, int blueHmax,
-			int blueSmax, int blueVmax, int width, int height, long matAddrGr,
-			long matAddrRgba, boolean debug);
+	public float getDistance() {
+		return 10.0f;
+	}
+
+	public float getOrientation() {
+		return 0.0f;
+	}
 
 }

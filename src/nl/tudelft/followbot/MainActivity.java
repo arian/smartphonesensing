@@ -396,8 +396,8 @@ public class MainActivity extends Activity {
 		// update the particle filter
 		if (cameraEstimation.robotSeen()) {
 
-			float d = cameraEstimation.getDistanceUserRobot();
-			float a = cameraEstimation.getAngleOrientation();
+			float d = cameraEstimation.getDistance();
+			float a = cameraEstimation.getOrientation();
 
 			Log.d(TAG, "-> " + d + " @ " + a);
 
