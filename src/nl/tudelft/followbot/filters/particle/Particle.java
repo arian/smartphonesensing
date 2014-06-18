@@ -84,7 +84,13 @@ public class Particle {
 	}
 
 	public double angleToOrigin() {
-		return (Math.atan2(y, x) + Math.atan2(1, 0));
+		double a = ((Math.atan2(y, x) + Math.atan2(1, 0)));
+		// Make sure a is in (-pi, pi]
+		if (a > Math.PI)
+			a -= Math.PI * 2;
+		else if (a <= -Math.PI)
+			a += Math.PI * 2;
+		return a;
 	}
 
 	@Override

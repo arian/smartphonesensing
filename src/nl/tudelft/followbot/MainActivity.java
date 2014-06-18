@@ -31,7 +31,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -67,7 +66,7 @@ public class MainActivity extends Activity {
 	/**
 	 * Number of particles in the filter
 	 */
-	private static final int FILTER_PARTICLES_COUNT = 100;
+	private static final int FILTER_PARTICLES_COUNT = 10;
 	/**
 	 * Initial radius in which the initial particles are distributed
 	 */
@@ -157,7 +156,18 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void run(long millis) {
-			plotView.plot(plotKNN ? getKNNData() : filter.getPositions());
+			double[][] data = plotKNN ? getKNNData() : filter.getPositions();
+			plotView.plot(data);
+
+			double distance = filter.getDistanceEstimate();
+			double orientation = filter.getOrientationEstimate();
+
+			Log.d(TAG, "-» " + distance + " @ " + orientation);
+
+			TextView tv = (TextView) findViewById(R.id.robot_estimation);
+			tv.setText(String
+					.format("%3.2f m %3.2f rad", distance, orientation));
+
 		}
 	};
 	/**
@@ -346,10 +356,6 @@ public class MainActivity extends Activity {
 		cal.start();
 	}
 
-	public void onClickDetectActivity(View view) {
-		detectActivity(0);
-	}
-
 	public void senseUserActivity(long millis) {
 		detectActivity(millis);
 		senseUserRotate();
@@ -403,7 +409,7 @@ public class MainActivity extends Activity {
 			float d = cameraEstimation.getDistance() / 100;
 			float a = cameraEstimation.getOrientation();
 
-			Log.d(TAG, "-> " + d + " @ " + a);
+			Log.d(TAG, "=> " + d + " @ " + a);
 
 			// camera distance measurement with x [m] deviation
 			filter.distanceMeasurement(d, MEASURE_DISTANCE_NOISE);

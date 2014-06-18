@@ -269,11 +269,10 @@ public class Filter {
 	}
 
 	/**
-	 * @TODO find the right particle
 	 * @return the most likely particle that should be the robot according to
 	 *         the filter
 	 */
-	public double getEstimate() {
+	public double getDistanceEstimate() {
 		double distance = 0;
 
 		for (int i = 0; i < particles.size(); i++) {
@@ -282,6 +281,17 @@ public class Filter {
 		}
 
 		return (distance / particles.size());
+	}
+
+	public double getOrientationEstimate() {
+		double orientation = 0;
+
+		for (int i = 0; i < particles.size(); i++) {
+			Particle p = particles.get(i);
+			orientation += p.getOrientation();
+		}
+
+		return (orientation / particles.size());
 	}
 
 	/**

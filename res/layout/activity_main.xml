@@ -20,14 +20,10 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <Button
-            android:id="@+id/btn_detect_activity"
+        <TextView
+            android:id="@+id/robot_estimation"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="30dip"
-            android:onClick="onClickDetectActivity"
-            android:text="@+string/btn_detect_activity"
-            android:textSize="@dimen/small" />
+            android:layout_height="wrap_content" />
 
         <TextView
             android:id="@+id/activity_output"
