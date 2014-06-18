@@ -4,13 +4,13 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class MovingAverage {
+
 	private final Queue<Double> window = new LinkedList<Double>();
 	private final int period;
 	private double sum;
 
 	public MovingAverage(int period) {
 		assert period > 0 : "Period must be a positive integer";
-
 		this.period = period;
 	}
 

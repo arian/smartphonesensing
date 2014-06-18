@@ -1,6 +1,5 @@
 package nl.tudelft.followbot.data;
 
-
 public class FeatureExtractor {
 
 	private final DataStack<Float> data;

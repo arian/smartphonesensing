@@ -39,44 +39,103 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
+	/**
+	 * Standard deviation of a camera distance measurement
+	 */
 	private static final double MEASURE_DISTANCE_NOISE = 0.10;
+	/**
+	 * Standard deviation of a camera heading measurement
+	 */
 	private static final double MEASURE_HEADING_NOISE = 0.10;
-
+	/**
+	 * std dev of the user orientation, which updates the particle filter
+	 */
 	private static final double USER_ROTATION_NOISE = 0.05; // radians
+	/**
+	 * when the knn classifier detects walking, this is the assumed walking
+	 * speed
+	 */
 	private static final double USER_MOVE_SPEED = 1.0; // meters / second
+	/**
+	 * this is the standard deviation of the walking speed.
+	 */
 	private static final double USER_MOVE_NOISE = 0.1;
-
+	/**
+	 * Number of particles in the filter
+	 */
 	private static final int FILTER_PARTICLES_COUNT = 100;
+	/**
+	 * Initial radius in which the initial particles are distributed
+	 */
 	private static final double FILTER_PARTICLES_INITIAL_DISTANCE = 2; // meters
-
+	/**
+	 * Tag for Log.d debug logs
+	 */
 	private final String TAG = "FollowBot";
-
+	/**
+	 * Camera Estimator communicates with the OpenCV binding which writes values
+	 * to this object, so they can be read here
+	 */
 	private final CameraEstimator cameraEstimation = new CameraEstimator();
-
+	/**
+	 * Latest 128 acceleration data values
+	 */
 	private final DataStack<float[]> accelStack = new DataStack<float[]>(128);
-
+	/**
+	 * Acceleration sensor object. This uses the accelerometer. A callback is
+	 * added that pushes values to the accelStack data stack
+	 */
 	private LinearAccelerometer accel;
+	/**
+	 * Combines acceleration and gravity sensor to calculate the orientation
+	 * (yaw) of the phone. Listeners can be added
+	 */
 	private OrientationCalculator orienCalc;
-
-	private final KNNClass standClass = new KNNClass("stand");
-	private final KNNClass walkClass = new KNNClass("walk");
-	private final KNN knn = new KNN();
-
-	private ScatterPlotView plotView;
-	private boolean plotKNN = false;
-
-	private Filter filter;
-
+	/**
+	 * Last measured yaw / orientation
+	 */
 	private float yaw;
+	/**
+	 * Previous measured yaw
+	 */
 	private double pYaw = Double.MIN_VALUE;
-
+	/**
+	 * KNN Classifier
+	 */
+	private final KNN knn = new KNN();
+	/**
+	 * KNN Class object for the "stand" activity
+	 */
+	private final KNNClass standClass = new KNNClass("stand");
+	/**
+	 * KNN Class object for the "walk" activity
+	 */
+	private final KNNClass walkClass = new KNNClass("walk");
+	/**
+	 * View element which is used to draw a scatter plot
+	 */
+	private ScatterPlotView plotView;
+	/**
+	 * Whether the KNN Classifier or Particle filter should be plotted
+	 */
+	private boolean plotKNN = false;
+	/**
+	 * The Particle Filter object
+	 */
+	private Filter filter;
+	/**
+	 * Periodical task to measure values and to sense user activity.
+	 */
 	private final Periodical measurePeriodical = new Periodical() {
 		@Override
 		public void run(long millis) {
+			measureRobot();
 			senseUserActivity(millis);
 		}
 	};
-
+	/**
+	 * Periodical task to plot the particle filter or the KNN data points
+	 */
 	private final Periodical plotPeriodical = new Periodical() {
 
 		public double[][] getKNNData() {
@@ -97,7 +156,9 @@ public class MainActivity extends Activity {
 			plotView.plot(plotKNN ? getKNNData() : filter.getPositions());
 		}
 	};
-
+	/**
+	 * OpenCV initialization
+	 */
 	private final BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(
 			this) {
 		@Override
@@ -224,6 +285,9 @@ public class MainActivity extends Activity {
 		return true;
 	}
 
+	/**
+	 * Actions for the menu
+	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -260,7 +324,7 @@ public class MainActivity extends Activity {
 	 * @param msg
 	 */
 	private void calibrateActivity(final KNNClass klass, final CharSequence msg) {
-		final int calibrationTime = 4;
+		final int calibrationTime = 4 * 1000;
 		final AccelerometerCalibration cal = new AccelerometerCalibration(
 				accel, calibrationTime);
 		final Context context = getApplicationContext();
@@ -283,11 +347,16 @@ public class MainActivity extends Activity {
 	}
 
 	public void senseUserActivity(long millis) {
-		measureRobot();
 		detectActivity(millis);
 		senseUserRotate();
 	}
 
+	/**
+	 * Use the KNN Classifier to detect the activity (walking/standing) and
+	 * update the particle filter accordingly
+	 * 
+	 * @param millis
+	 */
 	public void detectActivity(long millis) {
 		FeatureVector feature = new FeatureVector(null,
 				FeatureExtractor.extractFeaturesFromFloat4(accelStack));
@@ -306,6 +375,9 @@ public class MainActivity extends Activity {
 		}
 	}
 
+	/**
+	 * Update particle filter for user rotations
+	 */
 	public void senseUserRotate() {
 		if (pYaw != Double.MIN_VALUE) {
 			double diff = pYaw - yaw;
@@ -315,6 +387,9 @@ public class MainActivity extends Activity {
 		pYaw = yaw;
 	}
 
+	/**
+	 * Read camera measurements to add weights to particles and resample
+	 */
 	public void measureRobot() {
 
 		// if the robot is seen by the camera, then use measurements to
@@ -335,4 +410,5 @@ public class MainActivity extends Activity {
 			filter.resample();
 		}
 	}
+
 }

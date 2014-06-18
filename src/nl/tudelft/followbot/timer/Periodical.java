@@ -2,6 +2,9 @@ package nl.tudelft.followbot.timer;
 
 import android.os.Handler;
 
+/**
+ * Utility class to execute a certain task periodically or with a certain delay
+ */
 public class Periodical {
 
 	long previousTime;

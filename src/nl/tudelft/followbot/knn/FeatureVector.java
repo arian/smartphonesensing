@@ -18,23 +18,32 @@ public class FeatureVector {
 		return features;
 	}
 
+	/**
+	 * Distance to another point, scaled between min and max values
+	 * 
+	 * @param other
+	 * @param min
+	 * @param max
+	 * @return
+	 */
 	public float distance(FeatureVector other, float[] min, float[] max) {
 		float dist = 0;
-		float[] ofeatures = other.features;
-		int l = Math.min(features.length, ofeatures.length);
+		float[] sf = getNormalizedValues(min, max);
+		float[] so = other.getNormalizedValues(min, max);
+		int l = Math.min(sf.length, so.length);
 		for (int i = 0; i < l; i++) {
-			float div = max[i] - min[i];
-			if (div == 0) {
-				div = 1;
-			}
-			float x = (features[i] - min[i]) / div;
-			float y = (ofeatures[i] - min[i]) / div;
-			float a = x - y;
+			float a = sf[i] - so[i];
 			dist += a * a;
 		}
 		return dist;
 	}
 
+	/**
+	 * Get a new vectors with the maximum elements of this and other
+	 * 
+	 * @param other
+	 * @return
+	 */
 	public float[] max(float[] other) {
 		int lo = other.length;
 		int lf = features.length;
@@ -52,6 +61,12 @@ public class FeatureVector {
 		return m;
 	}
 
+	/**
+	 * Get a new vectors with the minimum elements of this and other
+	 * 
+	 * @param other
+	 * @return
+	 */
 	public float[] min(float[] other) {
 		int lo = other.length;
 		int lf = features.length;
@@ -67,6 +82,13 @@ public class FeatureVector {
 		return m;
 	}
 
+	/**
+	 * Create new array with values scaled between min and max
+	 * 
+	 * @param min
+	 * @param max
+	 * @return
+	 */
 	public float[] getNormalizedValues(float[] min, float[] max) {
 		float[] f = new float[features.length];
 		for (int i = 0; i < features.length; i++) {

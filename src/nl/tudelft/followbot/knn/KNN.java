@@ -12,17 +12,33 @@ public class KNN {
 	private float[] min;
 	private float[] max;
 
+	/**
+	 * Add new learned data point
+	 * 
+	 * @param feature
+	 */
 	public void add(FeatureVector feature) {
 		min = min == null ? feature.getFeatures().clone() : feature.min(min);
 		max = max == null ? feature.getFeatures().clone() : feature.max(max);
 		features.add(feature);
 	}
 
+	/**
+	 * Clear all data points
+	 */
 	public void clear() {
 		features.clear();
 		min = max = null;
 	}
 
+	/**
+	 * Classifiy a new feature vector with existing calibrated values
+	 * 
+	 * @param feature
+	 * @param n
+	 *            number of nearest points
+	 * @return
+	 */
 	public KNNClass classify(final FeatureVector feature, int n) {
 
 		KNNClass maxClass = null;
@@ -33,6 +49,7 @@ public class KNN {
 		final float[] mn = this.min;
 		final float[] mx = this.max;
 
+		// Sort by distance
 		Collections.sort(features, new Comparator<FeatureVector>() {
 
 			@Override
@@ -44,6 +61,8 @@ public class KNN {
 
 		});
 
+		// count type of classes for the N nearest neighbors and store which
+		// type occurs the most often
 		for (FeatureVector nearFeature : features) {
 			KNNClass nearClass = nearFeature.getKNNClass();
 			Integer s = score.get(nearClass);

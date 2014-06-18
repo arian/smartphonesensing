@@ -34,6 +34,9 @@ public class OrientationCalculator extends Observable implements SensorSink {
 		compass.pause();
 	}
 
+	/**
+	 * @link http://stackoverflow.com/a/6804786/430730
+	 */
 	@Override
 	public void push(SensorEvent event) {
 		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {

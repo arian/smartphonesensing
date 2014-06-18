@@ -52,6 +52,14 @@ public class Particles extends ArrayList<Particle> {
 		});
 	}
 
+	/**
+	 * Get the N closest particles around (x,y)
+	 * 
+	 * @param x
+	 * @param y
+	 * @param N
+	 * @return
+	 */
 	public Particles getParticlesAt(double x, double y, int N) {
 
 		sortAround(x, y);
@@ -65,6 +73,13 @@ public class Particles extends ArrayList<Particle> {
 		return ps;
 	}
 
+	/**
+	 * Get the closest particle to (x,y)
+	 * 
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public Particle getParticleAt(double x, double y) {
 		if (size() == 0) {
 			return null;

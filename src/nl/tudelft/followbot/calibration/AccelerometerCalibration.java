@@ -3,12 +3,15 @@ package nl.tudelft.followbot.calibration;
 import java.util.Observable;
 
 import nl.tudelft.followbot.data.DataStack;
-import nl.tudelft.followbot.sensors.LinearAccelerometer;
+import nl.tudelft.followbot.sensors.Sensor;
 import nl.tudelft.followbot.sensors.SensorSink;
 import nl.tudelft.followbot.timer.Periodical;
 import android.hardware.SensorEvent;
-import android.util.Log;
 
+/**
+ * Store data from the linear acceleration meter for a period of time. This data
+ * can be used to extract features from it.
+ */
 public class AccelerometerCalibration extends Observable {
 
 	private final DataStack<float[]> data = new DataStack<float[]>(1500);
@@ -17,7 +20,6 @@ public class AccelerometerCalibration extends Observable {
 		@Override
 		public void run(long millis) {
 			AccelerometerCalibration.this.end();
-			Log.d("FollowBot", millis + "");
 		}
 	};
 
@@ -29,19 +31,21 @@ public class AccelerometerCalibration extends Observable {
 		}
 	};
 
-	private final LinearAccelerometer sensor;
+	private final Sensor sensor;
+	private final int time;
 
 	private boolean running = false;
 
-	public AccelerometerCalibration(LinearAccelerometer snsr, int time) {
+	public AccelerometerCalibration(Sensor snsr, int t) {
 		sensor = snsr;
+		time = t;
 	}
 
 	public void start() {
 		if (running) {
 			return;
 		}
-		periodical.delay(5000);
+		periodical.delay(time);
 		sensor.addListener(sensorListener);
 		running = true;
 	}
