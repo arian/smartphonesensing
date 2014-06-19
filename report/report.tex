@@ -73,35 +73,94 @@ The abstract goes here.
 \end{abstract}
 
 \section{Introduction}
-% The very first letter is a 2 line initial drop letter followed
-% by the rest of the first word in caps.
-%
-% form to use if the first word consists of a single letter:
-% \IEEEPARstart{A}{demo} file is ....
-%
-% form to use if you need the single drop letter followed by
-% normal text (unknown if ever used by IEEE):
-% \IEEEPARstart{A}{}demo file is ....
-%
-% Some journals put the first two words in caps:
-% \IEEEPARstart{T}{his demo} file is ....
-%
-% Here we have the typical use of a "T" for an initial drop letter
-% and "HIS" in caps to complete the first word.
-\IEEEPARstart{T}{his} demo file is intended to serve as a ``starter file''
-for IEEE journal papers produced under \LaTeX\ using
-IEEEtran.cls version 1.8 and later.
-% You must have at least 2 lines in the paragraph with the drop letter
-% (should never be an issue)
-I wish you the best of success.
 
-\section{Robot Detection}
-In order to control the robot, it must be first detected and paired with the Android Smart Phone. Since pairing between the phone and the robot is achieved by simply connecting to the \texttt{IOIO} board's Bluetooth module, only the detection of the robot needs to be considered. Furthermore, accurate estimates of the robot's distance and orientation with respect to the user are needed so that a good control can be achieved.
+
+
+In order to control the robot, it must be first detected and paired with the
+Android Smart Phone. Since pairing between the phone and the robot is achieved
+by simply connecting to the \texttt{IOIO} board's Bluetooth module, only the
+detection of the robot needs to be considered. Furthermore, accurate estimates
+of the robot's distance and orientation with respect to the user are needed so
+that a good control can be achieved.
+
+The distance and orientation could be measured, but there are also other
+factors that influence the distance and orientation:
+
+\begin{itemize}
+ \item movement of the robot
+ \item rotation of the robot
+ \item movement of the user
+ \item rotation of the user
+\end{itemize}
+
+\section{Robot Localization using a Particle Filter}
+
+In \cite{fox1999monte} Monte Carlo Localization (MCL) is used to localize a
+mobile robot. MCL is a type of Particle Filter. The advantage of this method
+is that it continues, there is no need for a fine-grained grid which is
+necessary in Markov localization techniques. Compared to Kalman filter-based
+techniques a Particle Filter is multimodal. Finally it is easy to implement and
+combine different kinds of measurements and movements.
+
+The key underlying idea of the particle filter is to represent the belief
+of the location as $N$ weighted \emph{particles}. A particle is denoted as
+$((x,y,\theta),w)$, the location and orientation of the robot and
+the weight of the particle with $\sum_{n=1}^N w_n = 1$.
+
+The particle filter proceeds in three phases. First an initial belief
+distribution is created. Here $N$ Particles are randomly distributed around the
+origin. This is only executed once.
+
+The next phase is the \textbf{measurement phase}. In this phase measurements
+are executed. Measured values are the distance to the robot, the orientation of
+the robot and the heading. The heading is the angle between the user and robot:
+0 degrees if the robot is exactly in front of the user, +90 degrees if the
+robot is on the left side of the user and -90 degrees if it is on the right
+side. Each particle is assigned a weight depending on the measurement, e.g.\
+given this measured distance, what is the probability that the distance is
+actually the distance of this particle using a Gaussian distribution.
+
+\textbf{Resampling} is done after a measurement. Resampling moves particles
+to the location with the highest probability the robot is. There are multiple
+techniques for resampling \cite{douc2005comparison}. We implemented the
+simple Multinomial resampling. Figure~\ref{fig:particle-measurement} shows a
+3-dimensional plot of the particles.
+
+\begin{figure}[!htpb]
+ \centering
+ \includegraphics[width=3in]{images/particle-measure.pdf}
+ \caption{Weight of particles after a distance measurement. Then the particles
+ were resampled, as the green particles have a higher density where the weights
+of the red are higher. Finally a heading measurement was executed, which
+inreases the weight of the particles in a certain direction.}
+ \label{fig:particle-measurement}
+\end{figure}
+
+
+\textbf{Movement phase} is where movements are applied to the particles. There
+are four types of movement: 1) when the robot is commanded to rotate or 2) move,
+or 3) when the user moves or 4) rotates. Figure~\ref{fig:particle-move} shows
+how the particles move.
+
+\begin{figure}[!htpb]
+ \centering
+ \includegraphics[width=3in]{images/particle-move.pdf}
+ \caption{Weight of particles after a distance measurement. Then the particles
+inreases the weight of the particles in a certain direction.}
+ \label{fig:particle-move}
+\end{figure}
+
+
+\section{Measuring distance and orientation with Camera}
 
 \subsection{Shape Recognition}
-One straightforward solution to the detection problem is to simply make use of the phone's camera for detecting and tracking three colored spherical objects that are placed on the top of the robot.
 
-We first start off by converting the colored image from the standard RGB geometry into the HSV (Hue-Saturation-Value) representation. This is done due to the fact that it is much easier to filter out a range of colors in the HSV representation than in the normal RGB case. The HSV color cylinder is presented in Figure \ref{fig:sim}.
+One straightforward solution to the detection problem is to simply make use of
+the phone's camera for detecting and tracking three colored spherical objects
+(two blue balls and one green ball) that are placed on the top of the robot.
+
+We first start off by converting the colored image from the standard RGB geometry into the HSV (Hue-Saturation-Value) representation. This is done due to the fact that it is much easier to filter out a range of colors in the HSV representation than in the normal RGB case. The HSV color cylinder is presented in figure~\ref{fig:sim}.
+
 \begin{figure}[!htpb]
 \centering
 \includegraphics[width=2in]{images/hsv_representation}
@@ -287,21 +346,21 @@ The feature vector $\mathbf{v} = [ZC(\vec x) / t, P(\vec x)/ n]^\intercal$,
 where $t$ is the time between the first and last points, and $ZC(\vec x)$ and
 $P(\vec x)$ are calculated by:
 
-\[
+\begin{equation}
   s(x,y) = \left\{
     \begin{array}{l l}
-      1 & \quad \text{if~} x y < 0 \\
-      0 & \quad \text{if~} x y >= 0
+      1 & \quad \text{if~} x \cdot y < 0 \\
+      0 & \quad \text{if~} x \cdot y >= 0
   \end{array} \right.
-\]
+\end{equation}
 
-\[
+\begin{equation}
   ZC(\vec x) = \sum^{n-1}_{i=0} s(x_i, x_{i+1})
-\]
+\end{equation}
 
-\[
+\begin{equation}
   P = \sum^{n}_{i=0} x_i^2
-\]
+\end{equation}
 
 The kNN classifier consists out of two phases: a learning phase, where feature
 vectors with a known class (activity in this case) are stored. This results in
