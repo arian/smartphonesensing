@@ -1,5 +1,8 @@
 package nl.tudelft.followbot.bluetooth;
 
+import java.io.File;
+
+import nl.tudelft.followbot.LogFile;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -35,6 +38,9 @@ public class Bluetooth {
 					Log.d("BLUETOOTH", " RSSI: " + rssi + "dBm" + " Distance: "
 							+ getRSSIDistance(rssi) + "m" + " Device: "
 							+ device.getName());
+
+					LogFile.appendLog(new File(context.getExternalCacheDir(),
+							"logbt.csv"), String.format("%d,%d", rssi, 16));
 
 					Toast.makeText(
 							activity.getApplicationContext(),
