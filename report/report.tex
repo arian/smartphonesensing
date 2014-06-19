@@ -70,7 +70,19 @@
 % As a general rule, do not put math, special symbols or citations
 % in the abstract or keywords.
 \begin{abstract}
-The abstract goes here.
+
+A smartphone application that controls a simple moving robot such that the
+robot always follows the user has been built. Potentially this robot can be
+used for lifting heavy loads over long distances. The robot has really simple
+hardware, instead all the computations and sensing are done on the smartphone.
+A particle filter is used to localize the location and orientation.
+Measurements of the distance, orientation and heading are done by the phone's
+camera. The accelerometer sensor is used to detect walking activity and user
+orientation, which updates the particles of the filter. The robot is controlled
+by a \texttt{IOIO} board, a simple hardware device that directly follows
+commands from the phone through a Bluetooth connection. We have found that it is awesome
+
+
 \end{abstract}
 
 \section{Introduction}
@@ -86,7 +98,9 @@ The smartphone acts as the mother (moved by the user) and the robot as the baby
 goose. The objective of the robot is to follow the smartphone and, thus, the
 person carrying it. This kind of behavior can be used to great effect in moving
 very heavy loads over long distances, eliminating the need to constantly
-control the robot.
+control the robot. Using computational power and sensors of today's smartphones
+specialized and expensive hardware can be eliminated. Instead we can use a
+device that many people already have.
 
 We have built an Android smart phone application that controls a remote,
 wheeled robot. This robot can move forward and backwards, and turn left or
@@ -146,7 +160,7 @@ techniques for resampling \cite{douc2005comparison}. We implemented the
 simple Multinomial resampling. Figure~\ref{fig:particle-measurement} shows a
 3-dimensional plot of the particles.
 
-\begin{figure}[!htpb]
+\begin{figure}[!hpb]
  \centering
  \includegraphics[width=3in]{images/particle-measure.pdf}
  \caption{Weight of particles after a distance measurement. Then the particles
@@ -164,7 +178,7 @@ how the particles move. A move has a certain uncertainty, which is why the
 actual move of a particle is drawn from an probability with the original move
 as mean.
 
-\begin{figure}[!htpb]
+\begin{figure}[!hpb]
  \centering
  \includegraphics[width=3in]{images/particle-move.pdf}
  \caption{The blue particles is the initial belief, centered around (0,0). Then
@@ -180,9 +194,8 @@ particles. Each type of measurement of movement will be explained in the
 following sections.
 
 \section{Distance and Orientation Measurement}
-In order to control the robot, it must first be detected and paired with the Android Smart Phone. Since pairing between the phone and the robot is achieved by simply connecting to the \texttt{IOIO} board's Bluetooth module, only the detection of the robot needs to be considered. Furthermore, accurate estimates of the robot's distance and orientation with respect to the user are needed so that a good control can be achieved.
 
-\subsection{Shape Recognition}
+In order to control the robot, it must first be detected and paired with the Android Smart Phone. Since pairing between the phone and the robot is achieved by simply connecting to the \texttt{IOIO} board's Bluetooth module, only the detection of the robot needs to be considered. Furthermore, accurate estimates of the robot's distance and orientation with respect to the user are needed so that a good control can be achieved.
 
 One straightforward solution to the detection problem is to simply make use of
 the phone's camera for detecting and tracking three colored spherical objects
@@ -190,8 +203,8 @@ the phone's camera for detecting and tracking three colored spherical objects
 
 We first start off by converting the colored image from the standard RGB geometry into the HSV (Hue-Saturation-Value) representation. This is done due to the fact that it is much easier to filter out a range of colors in the HSV representation than in the normal RGB case. The HSV color cylinder is presented in figure~\ref{fig:sim}.
 
-\begin{figure}[!htpb]
-\centering
+\begin{figure}[!hpb]
+ \centering
 \includegraphics[width=2in]{images/hsv_representation}
 \caption{Hue-Saturation-Value color cylinder}
 \label{fig:sim}
@@ -200,8 +213,8 @@ We first start off by converting the colored image from the standard RGB geometr
 Using this representation, the images from the phone's camera can be thresholded based on the colors they contain. Since we are interested in detecting blue and green objects, a set of minimum and maximum bounds has been defined for each of the colors.
 
 The thresholding procedure results in two different images, i.e. one containing data for the color blue and the other one for the color green. These two images are combined into one through the use of an \texttt{OR} operation. This process is shown in Figure \ref{fig:thresh}.
-\begin{figure}[!htpb]
-\centering
+\begin{figure}[!hpb]
+ \centering
 \includegraphics[width=3in]{images/thresholding}
 \caption{Image thresholding}
 \label{fig:thresh}
@@ -216,8 +229,8 @@ The basic idea underlying the Hough Transform is that, given an image containing
 where $(a,b)$ are the coordinates of the circle's center and $r$ is its radius, an arbitrary edge point $(x_i, y_i)$ will be transformed into a right circular cone in the $(a,b,r)$ parameter space. If the image points lie in a circle, then the cones will intersect at a single point in $(a,b,r)$, corresponding to the parameters of the circle \cite{yuen1990cht}.
 
 The CHT is also capable of finding circles that are partially hidden, if enough of their boundary is visible. This feature is especially important for the project, since the lighting conditions are not perfect, resulting in parts of the tracking balls that will not be contained in the thresholded image. Such a case is presented in Figure \ref{fig:cht}.
-\begin{figure}[!htpb]
-\centering
+\begin{figure}[!hpb]
+ \centering
 \includegraphics[width=3in]{images/cht_incomplete}
 \caption{Circle detection using Hough Transform. Left: Thresholded image, with detected circles. Right: RGB image (in imperfect lighting conditions), with detected circles}
 \label{fig:cht}
@@ -234,8 +247,8 @@ In order to obtain a decently accurate distance estimation between the robot and
 The idea to use the integrated phone camera has been considered due to already having a working spherical object tracking algorithm, thus, we would only have to extend this algorithm to incorporate distance estimation.
 
 From a geometrical point of view, the user to robot distance estimation is presented in Figure \ref{fig:dist_camera}.
-\begin{figure}[!htpb]
-\centering
+\begin{figure}[!hpb]
+ \centering
 \includegraphics[width=2in]{images/distance_meas}
 \caption{Side-view of the distance estimation, using the phone camera. Phone-robot distance is represented by $d_p$, user-robot distance is represented by $d_u$, and the skew angle is represented by $b$}
 \label{fig:dist_camera}
@@ -269,8 +282,8 @@ Having the phone-robot distance and the skew angle estimates, the user-robot est
 Another method of estimating the distance between the user and the robot is by making use of the RSS signal coming from the Bluetooth connection between the Android phone and the robot.
 
 However, the method has been quickly dismissed due to extremely poor measurement results. Two main problems have been encountered. In the first place, RSS measurements did not have a deterministic sampling time, which is detrimental in the case of robot control applications. Secondly, the measured signal is very noisy, which also leads to an inaccurate distance measurement. The results obtained after repeated measurements of the RSS signal, at different distances is presented in Figure \ref{fig:rss}.
-\begin{figure}[!htpb]
-\centering
+\begin{figure}[!hpb]
+ \centering
 \includegraphics[width=3in]{images/rss_variance}
 \caption{Top-view of the orientation estimation, using the phone camera}
 \label{fig:rss}
@@ -284,8 +297,8 @@ Having implemented and tested both distance estimation techniques, the decision 
 
 Another aspect that needs to be accounted for when running the particle filter algorithm, is the robot's orientation with respect to the user. A schematic is presented in Figure \ref{fig:orient_camera}, where $a$ is the robot's orientation with respect to the user.
 
-\begin{figure}[!htpb]
-\centering
+\begin{figure}[!hpb]
+ \centering
 \includegraphics[width=2in]{images/orientation_meas}
 \caption{Top-view of the orientation estimation, using the phone camera}
 \label{fig:orient_camera}
@@ -345,8 +358,9 @@ $P(\vec x)$ are calculated by:
 The kNN classifier consists out of two phases: a learning phase, where feature
 vectors with a known class (activity in this case) are stored. This results in
 in a plot like figure~\ref{fig:knn-data}.
-\begin{figure}
-  \centering
+
+\begin{figure}[!hpb]
+ \centering
   \includegraphics[width=3in]{images/knn-data.pdf}
   \caption{kNN Learning data}
   \label{fig:knn-data}
@@ -395,8 +409,8 @@ By combining all the previously described components into the particle filter, r
 
 \section{Experimental Setup and Used Libraries}
 The project's experimental setup consists of a small-scale, 4-wheeled, $206\mathrm{x}200\mathrm{x}62\ mm$ robotic chassis, controlled by a \texttt{IOIO} board with the help of an \texttt{L298N} H-bridge module. The \texttt{IOIO} board communicates with the Android smart phone through a Bluetooth connection, achieved with the help of the \texttt{LogiLink} Class 1 Bluetooth dongle. On top of the setup, the three, previously mentioned, colored balls are placed. The robot chassis is presented in Figure \ref{fig:robot}.
-\begin{figure}[!htpb]
-  \centering
+\begin{figure}[!hpb]
+ \centering
   \includegraphics[width=1.5in]{images/robot}
   \caption{Robot chassis used for the project. It has four independent DC motors, controlling each wheel separately.}
   \label{fig:robot}
@@ -426,7 +440,7 @@ like running, can help to increase the user movement estimation.
 
 \section{Conclusion}
 
-We have built a Smart Phone application for Android to control a driving robot
+We have built a smartphone application for Android to control a driving robot
 which follows the user. To control the distance and orientation are estimated
 with an particle filer. The filter has in total seven inputs: three types of
 measurements: distance, heading and robot orientation measurements with the
