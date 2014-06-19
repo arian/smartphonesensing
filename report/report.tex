@@ -97,10 +97,10 @@ factors that influence the distance and orientation:
 
 In \cite{fox1999monte} Monte Carlo Localization (MCL) is used to localize a
 mobile robot. MCL is a type of Particle Filter. The advantage of this method
-is that it continues, there is no need for a fine-grained grid which is
+is that it is continuous, i.e.: there is no need for a fine-grained grid, which is
 necessary in Markov localization techniques. Compared to Kalman filter-based
-techniques a Particle Filter is multimodal. Finally it is easy to implement and
-combine different kinds of measurements and movements.
+techniques, a Particle Filter is multimodal. Finally it is easy to implement and it allows us to
+combine different kinds of measurements and movement models.
 
 The key underlying idea of the particle filter is to represent the belief
 of the location as $N$ weighted \emph{particles}. A particle is denoted as
@@ -181,8 +181,8 @@ Using this representation, the images from the phone's camera can be thresholded
 The thresholding procedure results in two different images, i.e. one containing data for the color blue and the other one for the color green. These two images are combined into one through the use of an \texttt{OR} operation. This process is shown in Figure \ref{fig:thresh}.
 \begin{figure}[!htpb]
 \centering
-%\includegraphics[width=2in]{figures/hsv_representation}
-\caption{Image thresholding process}
+\includegraphics[width=3in]{images/thresholding}
+\caption{Image thresholding}
 \label{fig:thresh}
 \end{figure}
 
@@ -197,12 +197,12 @@ where $(a,b)$ are the coordinates of the circle's center and $r$ is its radius, 
 The CHT is also capable of finding circles that are partially hidden, if enough of their boundary is visible. This feature is especially important for the project, since the lighting conditions are not perfect, resulting in parts of the tracking balls that will not be contained in the thresholded image. Such a case is presented in Figure \ref{fig:cht}.
 \begin{figure}[!htpb]
 \centering
-%\includegraphics[width=2in]{figures/hsv_representation}
+\includegraphics[width=3in]{images/cht_incomplete}
 \caption{Circle detection using Hough Transform. Left: Thresholded image, with detected circles. Right: RGB image (in imperfect lighting conditions), with detected circles}
 \label{fig:cht}
 \end{figure}
 
-As it can be observed, the Hough Transform achieves circle detection even if the image does not contain the entire shape.
+As it can be observed, the Hough Transform achieves circle detection even if the image does not contain the entire shape (in this case, almost the entire green ball is missing).
 
 The presented detection method has been implemented, with the help of the \texttt{OpenCV} library, in \texttt{C++}, and it was imported in the Android application through the \texttt{JNI} (Java Native Interface).
 
@@ -247,15 +247,33 @@ Having the phone-robot distance and the skew angle estimates, the user-robot est
 \subsubsection{Bluetooth RSS Signal}
 Another method of estimating the distance between the user and the robot is by making use of the RSS signal coming from the Bluetooth connection between the Android phone and the robot.
 
+However, the method has been quickly dismissed due to extremely poor measurement results. Two main problems have been encountered. In the first place, RSS measurements did not have a deterministic sampling time, which is detrimental in the case of robot control applications. Secondly, the measured signal is very noisy, which also leads to an inaccurate distance measurement. The results obtained after repeated measurements of the RSS signal, at different distances is presented in Figure \ref{fig:rss}.
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=3in]{images/rss_variance}
+\caption{Top-view of the orientation estimation, using the phone camera}
+\label{fig:rss}
+\end{figure}
 
+It can easily be observed that the RSS signal is extremely and would not yield good results in estimating relatively short distances.
+
+Having implemented and tested both distance estimation techniques, the decision to integrate the camera distance estimations in the particle filter algorithm is implicit.
 
 \subsection{Orientation Estimation}
+Another aspect that needs to be accounted for when running the particle filter algorithm, is the robot's orientation with respect to the user. A schematic is presented in Figure \ref{fig:orient_camera}, where $a$ is the robot's orientation with respect to the user.
 \begin{figure}[!htpb]
 \centering
 \includegraphics[width=2in]{images/orientation_meas}
 \caption{Top-view of the orientation estimation, using the phone camera}
 \label{fig:orient_camera}
 \end{figure}
+
+Assuming that the robot will always have an orientation between $[-\pi, \pi]$, analytical geometry can be used to determine the angle formed by the camera's X-axis and the line connecting the two blue balls. This corresponds exactly to computing the slope of a line, determined by two points:
+\begin{equation}
+a=\frac{y_2-y_1}{x_2-x_1}
+\end{equation}
+
+In order to obtain an estimated angle between $[-\pi, \pi]$, the \texttt{atan2} function is used when implementing the formula in \texttt{C++}.
 
 % An example of a floating figure using the graphicx package.
 % Note that \label must occur AFTER (or within) \caption.
