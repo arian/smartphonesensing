@@ -244,7 +244,7 @@ As it can be observed, the Hough Transform achieves circle detection even if the
 The presented detection method has been implemented, with the help of the \texttt{OpenCV} library, in \texttt{C++}, and it was imported in the Android application through the \texttt{JNI} (Java Native Interface).
 
 \subsection{Distance Estimation}
-In order to obtain a decently accurate distance estimation between the robot and the user, and at the same time keep the development costs low, we have explored two techniques for distance estimation, namely: estimating distance with the help of the integrated camera of the Android phone, and distance estimation using the Bluetooth RSS signal.
+In order to obtain a decently accurate distance estimation between the robot and the user, and at the same time keep the development costs low, we have explored two techniques for distance estimation, namely: estimating distance with the help of the integrated camera of the Android phone, and distance estimation using the Bluetooth Received Signal Strength (RSS) signal.
 
 \subsubsection{Android Phone Camera}
 The idea to use the integrated phone camera has been considered due to already having a working spherical object tracking algorithm, thus, we would only have to extend this algorithm to incorporate distance estimation.
