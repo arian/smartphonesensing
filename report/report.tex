@@ -214,7 +214,7 @@ The basic idea underlying the Hough Transform is that, given an image containing
 \begin{equation}
 \left(x-a\right)^2 + \left(y-b\right)^2 = r^2
 \end{equation}
-where $(a,b)$ are the coordinates of the circle's center and $r$ is its radius, an arbitrary edge point $(x_i, y_i)$ will be transformed into a right circular cone in the $(a,b,r)$ parameter space. If the image points lie in a circle, then the cones will intersect at a single point in $(a,b,r)$, corresponding to the parameters of the circle \todo{CITE HERE!}.
+where $(a,b)$ are the coordinates of the circle's center and $r$ is its radius, an arbitrary edge point $(x_i, y_i)$ will be transformed into a right circular cone in the $(a,b,r)$ parameter space. If the image points lie in a circle, then the cones will intersect at a single point in $(a,b,r)$, corresponding to the parameters of the circle \cite{yuen1990cht}.
 
 The CHT is also capable of finding circles that are partially hidden, if enough of their boundary is visible. This feature is especially important for the project, since the lighting conditions are not perfect, resulting in parts of the tracking balls that will not be contained in the thresholded image. Such a case is presented in Figure \ref{fig:cht}.
 \begin{figure}[!htpb]
@@ -367,7 +367,6 @@ We have found that 10 learning data points, $n=3$, a window size of $1.3$s
 and the chosen features give accurate results classifying walking and standing.
 
 \section{User Orientation}
-
 The user rotation is measured using the accelerometer (gravity) and the
 magnetic field sensor of the smartphone. Android has convenient methods to get
 the user orientation. The two types of sensors can be combined in the
@@ -378,9 +377,19 @@ and roll, though we are only interested in the yaw. Each time we want to update
 the particle filter we can take the difference and feed that into the particle
 filter.
 
-\section{Robot Movement}
+\section{Robot Movement Model}
+The particle filter contains a robot movement model, in order to be able to apply the same type of movement (or at least a relatively good estimate) to all particles whenever the real robot moves. 
 
-\section{Robot Rotation}
+\subsection{Robot Displacement Model}
+The robot's displacement model has been simplified as much as possible, i.e.: it has been assumed that the robot only performs a forward translational movement, along its direction, at a constant velocity, thus, allowing the computation of its displacement at every sample instant. 
+
+Based on the characteristics of the physical robot, we have estimated a displacement velocity of around $0.1$ meters every $0.25$ seconds. 
+
+\subsection{Robot Rotation Model}
+The robot rotation is similar to the robot movement model in the sense that it is assumed that the robot rotates with a constant angular velocity. Again, based on the physical characteristics of the robot, we have estimated an angular velocity of around $0.05$ radians every $0.25$ seconds.
+
+\section{Robot Control}
+By combining all the previously described components into the particle filter, robot distance and orientation estimates, with respect to the user, are obtained even when the filter does not receive measurements from the camera. This allows the development of one \texttt{ON-OFF} controller used to keep the robot's orientation around $0$ radians, and a second one used to maintain a certain distance between the robot and the user.
 
 \section{Experimental Setup and Used Libraries}
 The project's experimental setup consists of a small-scale, 4-wheeled, $206\mathrm{x}200\mathrm{x}62\ mm$ robotic chassis, controlled by a \texttt{IOIO} board with the help of an \texttt{L298N} H-bridge module. The \texttt{IOIO} board communicates with the Android smart phone through a Bluetooth connection, achieved with the help of the \texttt{LogiLink} Class 1 Bluetooth dongle. On top of the setup, the three, previously mentioned, colored balls are placed. The robot chassis is presented in Figure \ref{fig:robot}.
@@ -393,7 +402,7 @@ The project's experimental setup consists of a small-scale, 4-wheeled, $206\math
 
 The smart phones used in developing the Android application are the following: HTC Desire V, running Android 4.0.3 (Ice-Cream Sandwich) and Sony Xperia SP, running Android 4.3 (Jelly Bean).
 
-The libraries used for developing the different modules of the application, excluding the \texttt{Android API}, were: the \texttt{OpenCV} libraries for computer vision and image processing, used in detecting the robot, and estimating its distance and orientation with respect to the user; the \texttt{IOIO API} was used in order to communicate with the \texttt{IOIO} board and to use the board's features.
+The libraries used for developing the different modules of the application, excluding the \texttt{Android API}, were: the \texttt{OpenCV} libraries for computer vision and image processing, used in detecting the robot, and estimating its distance and orientation with respect to the user; the \texttt{IOIO API} was used in order to communicate with the \texttt{IOIO} board and to use the board's features. Also, the \texttt{Java} classes, used for the density and quantile computations (contained in the \texttt{nl.tudelft.followbot.math} package), are part of the \texttt{PAL 1.4} phylogenetic analysis library. 
 
 \todo{IOIO Board, that stuff}
 
