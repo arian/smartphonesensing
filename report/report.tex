@@ -88,12 +88,12 @@ person carrying it. This kind of behavior can be used to great effect in moving
 very heavy loads over long distances, eliminating the need to constantly
 control the robot.
 
-We will build an Android phone application that controls a remote, wheeled
-robot. This robot can move forward and backwards, and turn left or right. The
-smartphone sends direction commands to the robot via a Bluetooth connection.
-The robot blindly follows the commands, the Android phone being the smart
-component in this setup. For the smarthpone to be smart it should be able to
-localize the robot so that it can send appropriate commands to it.
+We have built an Android smart phone application that controls a remote,
+wheeled robot. This robot can move forward and backwards, and turn left or
+right. The smartphone sends direction commands to the robot via a Bluetooth
+connection.  The robot blindly follows the commands, the Android phone being
+the smart component in this setup. For the smarthpone to be smart it should be
+able to localize the robot so that it can send appropriate commands to it.
 
 \section{Problem Description}
 
@@ -406,9 +406,41 @@ The libraries used for developing the different modules of the application, excl
 
 \todo{IOIO Board, that stuff}
 
+\section{Future Work}
+
+During the development of the application we made several assumptions. In
+hindsight there are several spots improvements can be made.
+
+The distance estimation of the robot using the camera and colored balls worked
+very well, for smaller distances. When the distance increased, for roughly
+more than 1.5 meters, the object tracking did not recognize the balls perfectly
+anymore, or found other objects, e.g.\ a computer screen, instead of the balls.
+When using better object recognition, using a more unique pattern, like a
+chessboard pattern, the object tracking and distance measurements can be improved.
+
+Activity Monitoring works really well classifying standing or walking. However
+there is a big assumption that the walking speed is constant. Linking the
+periodicity, the number of zero crossings, or frequency using a Fourier
+Transform, to the walking speed this can be improved. Adding more classes,
+like running, can help to increase the user movement estimation.
 
 \section{Conclusion}
-The conclusion goes here.
+
+We have built a Smart Phone application for Android to control a driving robot
+which follows the user. To control the distance and orientation are estimated
+with an particle filer. The filter has in total seven inputs: three types of
+measurements: distance, heading and robot orientation measurements with the
+camera, user movement through activity monitoring with a kNN filter using
+the accelerometer, user movement using the magnetic and gravity sensors. Robot
+movement and rotation for the particle filter are the same values used to
+control the robot.
+
+Using the \texttt{IOIO} board and library we can control the robot: make it
+move forward and make it rotate.
+
+By connecting the localization and the robot control we will make the robot
+follow us.
+
 
 \bibliographystyle{IEEEtran}
 \bibliography{report}
