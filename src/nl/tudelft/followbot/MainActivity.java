@@ -211,8 +211,8 @@ public class MainActivity extends Activity {
 		accel.addListener(new SensorSink() {
 			@Override
 			public void push(SensorEvent event) {
-				accelStack.push(new float[] { event.timestamp, event.values[0],
-						event.values[1], event.values[2] });
+				accelStack.push(new float[] { (float) (event.timestamp / 1e9),
+						event.values[0], event.values[1], event.values[2] });
 			}
 		});
 
