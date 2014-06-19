@@ -71,19 +71,16 @@
 % in the abstract or keywords.
 \begin{abstract}
 
-A smartphone application that controls a simple moving robot such that the
-robot always follows the user has been built. Potentially this robot can be
-used for lifting heavy loads over long distances. The robot has really simple
-hardware, instead all the computations and sensing are done on the smartphone.
-A particle filter is used to localize the location and orientation of the
-robot.  Measurements of the distance, orientation and heading are done by the
-phone's camera using object tracking. The accelerometer sensor is used to
-detect walking activity, with a kNN classifier, and user orientation, which
-updates the particles of the filter. The robot is controlled by a \texttt{IOIO}
-board, a simple hardware device that directly follows commands from the phone
-through a Bluetooth connection. We found that the localization with the
-particle filter is working well. Measuring the distance with the camera works
-well as well, but only for smaller distances.
+In this report, we present the development process of an Android smartphone application that controls a simple moving robot, such that it always follows the user. A possible application for this robot, with the necessary modifications, is carrying heavy loads over long distances. The robot consists of simple
+hardware components, and the computation and sensing is done on the smartphone.
+A particle filter is used to estimate the distance and the orientation of the robot with respect to the user.
+Measurements of the distance, orientation and heading are done by the phone's
+camera, using object tracking. The accelerometer sensor is used to detect
+walking activity, with the help of a kNN classifier, and user orientation, used in updating
+the particles of the filter. The robot is controlled by a \texttt{IOIO} board,
+a simple hardware device that directly follows commands from the phone through
+a Bluetooth connection. We found that the particle filter localization
+is working well. Measuring the distance with the camera is also functional, however only for short distances.
 
 \end{abstract}
 
@@ -157,7 +154,7 @@ given this measured distance, what is the probability that the distance is
 actually the distance of this particle using a Gaussian distribution.
 
 \textbf{Resampling} is done after a measurement. Resampling moves particles
-to the location with the highest probability the robot is. There are multiple
+to the location with the highest probability the robot is positioned in. There are multiple
 techniques for resampling \cite{douc2005comparison}. We implemented the
 simple Multinomial resampling. Figure~\ref{fig:particle-measurement} shows a
 3-dimensional plot of the particles after a distance measurement, resampling
@@ -172,7 +169,7 @@ of the red are higher. Finally a heading measurement was executed, which
 inreases the weight of the particles in a certain direction.}
  \label{fig:particle-measurement}
 \end{figure}
-
+%
 \textbf{Movement phase} is where movements are applied to the particles. There
 are four types of movement: 1) when the robot is commanded to rotate or 2) move,
 or 3) when the user moves or 4) rotates. Figure~\ref{fig:particle-move} shows
@@ -197,7 +194,7 @@ following sections.
 
 \section{Distance and Orientation Measurement}
 
-In order to control the robot, it must first be detected and paired with the Android Smart Phone. Since pairing between the phone and the robot is achieved by simply connecting to the \texttt{IOIO} board's Bluetooth module, only the detection of the robot needs to be considered. Furthermore, accurate estimates of the robot's distance and orientation with respect to the user are needed so that a good control can be achieved.
+In order to control the robot, the detection of the robot needs to be considered. Furthermore, accurate estimates of the robot's distance and orientation with respect to the user are needed so that a good control can be achieved.
 
 One straightforward solution to the detection problem is to simply make use of
 the phone's camera for detecting and tracking three colored spherical objects
