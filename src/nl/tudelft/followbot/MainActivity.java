@@ -1,5 +1,6 @@
 package nl.tudelft.followbot;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
@@ -352,6 +353,11 @@ public class MainActivity extends Activity {
 			public void update(Observable observable, Object data) {
 				DataStack<float[]> ds = cal.getData();
 				float[] d = FeatureExtractor.extractFeaturesFromFloat4(ds);
+
+				LogFile.appendLog(new File(context.getExternalCacheDir(),
+						"logs5.csv"), String.format("%f,%f,%d", d[0], d[1],
+						klass == walkClass ? 1 : 0));
+
 				FeatureVector feature = new FeatureVector(klass, d);
 				knn.add(feature);
 				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();

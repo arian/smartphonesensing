@@ -17,7 +17,8 @@ public class FeatureExtractor {
 						if (x.length >= 4 && x[0] >= since) {
 							// Multiply with the sign of the vertical
 							// axis, so it can count the zero crossings
-							float v = (x[1] * x[1] + x[2] * x[2] + x[3] * x[3])
+							float v = (float) Math.sqrt(x[1] * x[1] + x[2]
+									* x[2] + x[3] * x[3])
 									* Math.signum(x[2]);
 							d.push(v);
 						}
