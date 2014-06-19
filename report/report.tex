@@ -282,7 +282,7 @@ b=-\frac{3}{4}\beta_{max}+\frac{540}{4}
 \end{equation}
 where $\beta_{max}$ is the largest angle of the tracked triangle.
 
-Having the phone-robot distance and the skew angle estimates, the user-robot estimated distance can be computed using Equation \ref{eq:dist_estim}.
+Having the phone-robot distance and the skew angle estimates, the user-robot estimated distance can be computed using Equation \ref{eq:dist_estim}, obtaining an estimate with an error of around $0.2$ meters.
 
 \subsubsection{Bluetooth RSS Signal}
 Another method of estimating the distance between the user and the robot is by making use of the RSS signal coming from the Bluetooth connection between the Android phone and the robot.
@@ -317,7 +317,7 @@ Assuming that the robot will always have an orientation between $(-\pi, \pi]$, a
 a=\frac{y_2-y_1}{x_2-x_1}
 \end{equation}
 
-In order to obtain an estimated angle between $(-\pi, \pi]$, the \texttt{atan2} function is used when implementing the formula in \texttt{C++}.
+In order to obtain an estimated angle between $(-\pi, \pi]$, the \texttt{atan2} function is used when implementing the formula in \texttt{C++}. The obtained estimate has an error of around $0.05$ radians.
 
 \subsection{User Heading Measurement}
 Having detected the robot, the user's heading with respect to the robot is set to zero. This is done in order for the assumption that the robot -- when detected by the camera -- is always in front of the user to hold.
