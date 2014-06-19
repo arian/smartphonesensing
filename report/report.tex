@@ -407,6 +407,19 @@ calculate the distance.
 We have found that 10 learning data points, $n=3$, a window size of $1.3$s
 and the chosen features give accurate results classifying walking and standing.
 
+\section{User Orientation}
+
+The user rotation is measured using the accelerometer (gravity) and the
+magnetic field sensor of the smartphone. Android has convenient methods to get
+the user orientation. The two types of sensors can be combined in the
+\texttt{SensorManager.getRotationMatrix} function which fills a rotation
+matrix. From this rotation matrix the orientation can be extracted using the
+\texttt{SensorManager.getOrientation} function. This returns the yaw, pitch
+and roll, though we are only interested in the yaw. Each time we want to update
+the particle filter we can take the difference and feed that into the particle
+filter.
+
+
 \section{Conclusion}
 The conclusion goes here.
 
