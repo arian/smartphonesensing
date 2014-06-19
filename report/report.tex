@@ -449,13 +449,13 @@ like running, can help to increase the user movement estimation.
 \section{Conclusion}
 
 We have built a smartphone application for Android to control a driving robot
-which follows the user. To control the distance and orientation are estimated
-with an particle filer. The filter has in total seven inputs: three types of
-measurements: distance, heading and robot orientation measurements with the
-camera, user movement through activity monitoring with a kNN filter using
-the accelerometer, user movement using the magnetic and gravity sensors. Robot
-movement and rotation for the particle filter are the same values used to
-control the robot.
+which follows the user. In order to control the robot, the distance and
+orientation are estimated with a particle filer. The filter has in total seven
+inputs: three types of measurements: distance, heading and robot orientation
+measurements with the camera, user movement through activity monitoring with a
+kNN filter using the accelerometer, user movement using the magnetic and
+gravity sensors. Robot movement and rotation for the particle filter are the
+same values used to control the robot.
 
 Using the \texttt{IOIO} board and library we can control the robot: make it
 move forward and make it rotate.
