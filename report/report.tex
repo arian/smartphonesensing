@@ -108,8 +108,8 @@ of the location as $N$ weighted \emph{particles}. A particle is denoted as
 $((x,y,\theta),w)$, the location and orientation of the robot and
 the weight of the particle with $\sum_{n=1}^N w_n = 1$.
 
-The particle filter proceeds in three phases. First an initial belief
-distribution is created. Here $N$ Particles are randomly distributed around the
+The particle filter proceeds in three phases. First an \textbf{initial belief
+distribution} is created. Here $N$ Particles are randomly distributed around the
 origin. This is only executed once.
 
 The next phase is the \textbf{measurement phase}. In this phase measurements
@@ -160,7 +160,7 @@ The iterations of measuring, resampling and movements constantly update the
 particles. Each type of measurement of movement will be explained in the
 following sections.
 
-\section{Measuring distance and orientation with Camera}
+\section{Distance and Orientation Measurement using the Integrated Phone Camera}
 
 \todo{measure heading}
 
@@ -404,7 +404,6 @@ $P(\vec x)$ are calculated by:
 The kNN classifier consists out of two phases: a learning phase, where feature
 vectors with a known class (activity in this case) are stored. This results in
 in a plot like figure~\ref{fig:knn-data}.
-
 \begin{figure}
   \centering
   \includegraphics[width=3in]{images/knn-data.pdf}
@@ -444,8 +443,18 @@ filter.
 
 \section{Robot Rotation}
 
-\section{Robot Implementation}
+\section{Experimental Setup and Used Libraries}
+The project's experimental setup consists of a small-scale, 4-wheeled, $206\mathrm{x}200\mathrm{x}62\ mm$ robotic chassis, controlled by a \texttt{IOIO} board with the help of an \texttt{L298N} H-bridge module. The \texttt{IOIO} board communicates with the Android smart phone through a Bluetooth connection, achieved with the help of the \texttt{LogiLink} Class 1 Bluetooth dongle. On top of the setup, the three, previously mentioned, colored balls are placed. The robot chassis is presented in Figure \ref{fig:robot}.
+\begin{figure}[!htpb]
+  \centering
+  \includegraphics[width=1.5in]{images/robot}
+  \caption{Robot chassis used for the project. It has four independent DC motors, controlling each wheel separately.}
+  \label{fig:robot}
+\end{figure}
 
+The smart phones used in developing the Android application are the following: HTC Desire V, running Android 4.0.3 (Ice-Cream Sandwich) and Sony Xperia SP, running Android 4.3 (Jelly Bean).
+
+The libraries used for developing the different modules of the application, excluding the \texttt{Android API}, were: the \texttt{OpenCV} libraries for computer vision and image processing, used in detecting the robot, and estimating its distance and orientation with respect to the user; the \texttt{IOIO API} was used in order to communicate with the \texttt{IOIO} board and to use the board's features.
 
 \todo{IOIO Board, that stuff}
 
