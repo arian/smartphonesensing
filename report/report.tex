@@ -179,9 +179,8 @@ The iterations of measuring, resampling and movements constantly update the
 particles. Each type of measurement of movement will be explained in the
 following sections.
 
-\section{Distance and Orientation Measurement using the Integrated Phone Camera}
-
-\todo{measure heading}
+\section{Distance and Orientation Measurement}
+In order to control the robot, it must first be detected and paired with the Android Smart Phone. Since pairing between the phone and the robot is achieved by simply connecting to the \texttt{IOIO} board's Bluetooth module, only the detection of the robot needs to be considered. Furthermore, accurate estimates of the robot's distance and orientation with respect to the user are needed so that a good control can be achieved.
 
 \subsection{Shape Recognition}
 
@@ -299,6 +298,9 @@ a=\frac{y_2-y_1}{x_2-x_1}
 \end{equation}
 
 In order to obtain an estimated angle between $(-\pi, \pi]$, the \texttt{atan2} function is used when implementing the formula in \texttt{C++}.
+
+\subsection{User Heading Measurement}
+Having detected the robot, the user's heading with respect to the robot is set to zero. This is done in order for the assumption that the robot -- when detected by the camera -- is always in front of the user to hold.
 
 \section{User Movement through Activity Monitoring}
 
