@@ -211,7 +211,7 @@ We first start off by converting the colored image from the standard RGB geometr
 \caption{Hue-Saturation-Value color cylinder}
 \label{fig:sim}
 \end{figure}
-%
+
 Using this representation, the images from the phone's camera can be thresholded based on the colors they contain. Since we are interested in detecting blue and green objects, a set of minimum and maximum bounds has been defined for each of the colors.
 
 The thresholding procedure results in two different images, i.e. one containing data for the color blue and the other one for the color green. These two images are combined into one through the use of an \texttt{OR} operation. This process is shown in Figure \ref{fig:thresh}.
@@ -222,7 +222,7 @@ The thresholding procedure results in two different images, i.e. one containing 
 \caption{Image thresholding}
 \label{fig:thresh}
 \end{figure}
-%
+
 Having the thresholded image obtained, the Circle Hough Transform (CHT) can be applied in order to obtain the three circles present in the image, and track them.
 
 The basic idea underlying the Hough Transform is that, given an image containing a circle described as:
@@ -230,6 +230,7 @@ The basic idea underlying the Hough Transform is that, given an image containing
 \begin{equation}
 \left(x-a\right)^2 + \left(y-b\right)^2 = r^2
 \end{equation}
+
 where $(a,b)$ are the coordinates of the circle's center and $r$ is its radius, an arbitrary edge point $(x_i, y_i)$ will be transformed into a right circular cone in the $(a,b,r)$ parameter space. If the image points lie in a circle, then the cones will intersect at a single point in $(a,b,r)$, corresponding to the parameters of the circle \cite{yuen1990cht}.
 
 The CHT is also capable of finding circles that are partially hidden, if enough of their boundary is visible. This feature is especially important for the project, since the lighting conditions are not perfect, resulting in parts of the tracking balls that will not be contained in the thresholded image. Such a case is presented in Figure \ref{fig:cht}.
@@ -240,7 +241,7 @@ The CHT is also capable of finding circles that are partially hidden, if enough 
 \caption{Circle detection using Hough Transform. Left: Thresholded image, with detected circles. Right: RGB image (in imperfect lighting conditions), with detected circles}
 \label{fig:cht}
 \end{figure}
-%
+
 As it can be observed, the Hough Transform achieves circle detection even if the image does not contain the entire shape (in this case, almost the entire green ball is missing).
 
 The presented detection method has been implemented, with the help of the \texttt{OpenCV} library, in \texttt{C++}, and it was imported in the Android application through the \texttt{JNI} (Java Native Interface).
@@ -259,7 +260,7 @@ From a geometrical point of view, the user to robot distance estimation is prese
 \caption{Side-view of the distance estimation, using the phone camera. Phone-robot distance is represented by $d_p$, user-robot distance is represented by $d_u$, and the skew angle is represented by $b$}
 \label{fig:dist_camera}
 \end{figure}
-%
+
 It can be observed that the user-robot distance $d_u$ can be obtained by simply applying the following formula:
 
 \begin{equation}
@@ -296,7 +297,7 @@ However, the method has been quickly dismissed due to extremely poor measurement
 \caption{Top-view of the orientation estimation, using the phone camera}
 \label{fig:rss}
 \end{figure}
-%
+
 It can easily be observed that the RSS signal is extremely noisy and would not yield good results in estimating relatively short distances.
 
 Having implemented and tested both distance estimation techniques, the decision to integrate the camera distance estimations in the particle filter algorithm is implicit.
@@ -311,7 +312,7 @@ Another aspect that needs to be accounted for when running the particle filter a
 \caption{Top-view of the orientation estimation, using the phone camera}
 \label{fig:orient_camera}
 \end{figure}
-%
+
 Assuming that the robot will always have an orientation between $(-\pi, \pi]$, analytical geometry can be used to determine the angle formed by the camera's X-axis and the line connecting the two blue balls. This corresponds exactly to computing the slope of a line, determined by two points:
 
 \begin{equation}
@@ -373,7 +374,7 @@ in a plot like figure~\ref{fig:knn-data}.
   \caption{kNN Learning data}
   \label{fig:knn-data}
 \end{figure}
-%
+
 The second phase is the classification phase. A newly measured feature vector
 is compared with the learning data. By selecting the $n$ nearest neighbors,
 counting how many points each class has and finally selecting the class with
@@ -425,7 +426,7 @@ The project's experimental setup consists of a small-scale, 4-wheeled, $206\math
   \caption{Robot chassis used for the project. It has four independent DC motors, controlling each wheel separately.}
   \label{fig:robot}
 \end{figure}
-%
+
 The smart phones used in developing the Android application are the following: HTC Desire V, running Android 4.0.3 (Ice-Cream Sandwich) and Sony Xperia SP, running Android 4.3 (Jelly Bean).
 
 The libraries used for developing the different modules of the application, excluding the \texttt{Android API}, were: the \texttt{OpenCV} libraries for computer vision and image processing, used in detecting the robot, and estimating its distance and orientation with respect to the user; the \texttt{IOIO API} was used in order to communicate with the \texttt{IOIO} board and to use the board's features. Also, the \texttt{Java} classes, used for the density and quantile computations (contained in the \texttt{nl.tudelft.followbot.math} package), are part of the \texttt{PAL 1.4} phylogenetic analysis library.
