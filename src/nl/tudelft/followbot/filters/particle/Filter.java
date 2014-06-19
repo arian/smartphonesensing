@@ -1,5 +1,10 @@
 package nl.tudelft.followbot.filters.particle;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+
 import javax.swing.JFrame;
 
 import nl.tudelft.followbot.math.IDistribution;
@@ -331,16 +336,47 @@ public class Filter {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 
+	public void saveToFile(File file) {
+		PrintWriter writer;
+		try {
+			writer = new PrintWriter(file, "UTF-8");
+			for (Particle p : particles) {
+				writer.println(String.format("%f,%f,%f,%f", p.getX(), p.getY(),
+						p.getOrientation(), p.getWeight()));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+	}
+
 	static public void main(String[] argv) {
-		Filter filter = new Filter().fill(10000, 10);
+		Filter filter = new Filter().fill(100, 10);
 
-		filter.distanceMeasurement(5, 0.1);
-		filter.plot("Initial measurement");
+		String folder = "/home/arian/dev/android/FollowBot/report/images";
 
-		filter.newResample();
+		// filter.plot("Initialization");
+		filter.saveToFile(new File(folder, "moveInitialization.csv"));
+		//
+		filter.userMove(30, 0.5);
+		filter.saveToFile(new File(folder, "userMove.csv"));
+		//
+		filter.userRotate(Math.PI / 2, 0.2);
+		filter.saveToFile(new File(folder, "userRotate.csv"));
 
-		filter.headingMeasurement(0, 0.3);
-		filter.plot("Heading measurement");
+		// filter.distanceMeasurement(5, 1);
+		// filter.saveToFile(new File(folder, "measureDistance.csv"));
+		// filter.resample();
+		// filter.plot("Initial measurement");
+		//
+		// filter.newResample();
+		//
+		// filter.headingMeasurement(0, 0.3);
+		// filter.saveToFile(new File(folder, "measureHeading.csv"));
+
+		// filter.plot("Heading measurement");
 		/*
 		 * filter.resample(); filter.plot("after resampling 2");
 		 * 
@@ -446,5 +482,4 @@ public class Filter {
 		 * filter.plot("new distance measurement");
 		 */
 	}
-
 }
