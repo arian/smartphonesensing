@@ -1,3 +1,6 @@
 report.pdf
 *.log
 revision.tex
+*.bbl
+*.blg
+*.aux
