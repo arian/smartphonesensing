@@ -75,33 +75,52 @@ The abstract goes here.
 
 \section{Introduction}
 
+There is an existing assumption that when baby geese come out of their eggs,
+they assume that their mother is the first thing they see. Usually this is
+true, the baby geese following their mother until they able to fend for
+themselves. If a human were to be the first thing the baby geese saw, they
+would simply follow the human too.
 
+Using an Android smartphone and a simple robot we can simulate the same effect.
+The smartphone acts as the mother (moved by the user) and the robot as the baby
+goose. The objective of the robot is to follow the smartphone and, thus, the
+person carrying it. This kind of behavior can be used to great effect in moving
+very heavy loads over long distances, eliminating the need to constantly
+control the robot.
 
-In order to control the robot, it must be first detected and paired with the
-Android Smart Phone. Since pairing between the phone and the robot is achieved
-by simply connecting to the \texttt{IOIO} board's Bluetooth module, only the
-detection of the robot needs to be considered. Furthermore, accurate estimates
-of the robot's distance and orientation with respect to the user are needed so
-that a good control can be achieved.
+We will build an Android phone application that controls a remote, wheeled
+robot. This robot can move forward and backwards, and turn left or right. The
+smartphone sends direction commands to the robot via a Bluetooth connection.
+The robot blindly follows the commands, the Android phone being the smart
+component in this setup. For the smarthpone to be smart it should be able to
+localize the robot so that it can send appropriate commands to it.
 
-The distance and orientation could be measured, but there are also other
-factors that influence the distance and orientation:
+\section{Problem Description}
 
-\begin{itemize}
- \item movement of the robot
- \item rotation of the robot
- \item movement of the user
- \item rotation of the user
-\end{itemize}
+Localization of the robot is not a trivial task, we need to combine multiple
+sensors of the smartphone to achieve an accurate estimate of the location of
+the robot. However, in addition to the robot's location, the phone also needs
+to know the orientation of the robot, so it can decide whether to send forward,
+backwards, left or right commands to the robot.
+
+If the robot cannot be measured entirely, the phone should still track the
+location and orientation of the robot. When taking the movements and
+rotations of the user and robot into account the robot will continue to be
+tracked.
+
+The robot is a simple four wheeled chassis with a \texttt{IOIO} board,
+which communicates with Android over Bluetooth. The \texttt{IOIO} board
+controls the wheels with a PWM signal with the help of a H-Bridge.
 
 \section{Robot Localization using a Particle Filter}
 
 In \cite{fox1999monte} Monte Carlo Localization (MCL) is used to localize a
-mobile robot. MCL is a type of Particle Filter. The advantage of this method
-is that it is continuous, i.e.: there is no need for a fine-grained grid, which is
+mobile robot. MCL is a type of Particle Filter. The advantage of this method is
+that it is continuous, i.e.: there is no need for a fine-grained grid, which is
 necessary in Markov localization techniques. Compared to Kalman filter-based
-techniques, a Particle Filter is multimodal. Finally it is easy to implement and it allows us to
-combine different kinds of measurements and movement models.
+techniques, a Particle Filter is multimodal. Finally it is easy to implement
+and it allows us to combine different kinds of measurements and movement
+models.
 
 The key underlying idea of the particle filter is to represent the belief
 of the location as $N$ weighted \emph{particles}. A particle is denoted as
@@ -195,7 +214,7 @@ The basic idea underlying the Hough Transform is that, given an image containing
 \begin{equation}
 \left(x-a\right)^2 + \left(y-b\right)^2 = r^2
 \end{equation}
-where $(a,b)$ are the coordinates of the circle's center and $r$ is its radius, an arbitrary edge point $(x_i, y_i)$ will be transformed into a right circular cone in the $(a,b,r)$ parameter space. If the image points lie in a circle, then the cones will intersect at a single point in $(a,b,r)$, corresponding to the parameters of the circle [CITE HERE!].
+where $(a,b)$ are the coordinates of the circle's center and $r$ is its radius, an arbitrary edge point $(x_i, y_i)$ will be transformed into a right circular cone in the $(a,b,r)$ parameter space. If the image points lie in a circle, then the cones will intersect at a single point in $(a,b,r)$, corresponding to the parameters of the circle \todo{CITE HERE!}.
 
 The CHT is also capable of finding circles that are partially hidden, if enough of their boundary is visible. This feature is especially important for the project, since the lighting conditions are not perfect, resulting in parts of the tracking balls that will not be contained in the thresholded image. Such a case is presented in Figure \ref{fig:cht}.
 \begin{figure}[!htpb]
@@ -263,7 +282,9 @@ It can easily be observed that the RSS signal is extremely and would not yield g
 Having implemented and tested both distance estimation techniques, the decision to integrate the camera distance estimations in the particle filter algorithm is implicit.
 
 \subsection{Orientation Estimation}
+
 Another aspect that needs to be accounted for when running the particle filter algorithm, is the robot's orientation with respect to the user. A schematic is presented in Figure \ref{fig:orient_camera}, where $a$ is the robot's orientation with respect to the user.
+
 \begin{figure}[!htpb]
 \centering
 \includegraphics[width=2in]{images/orientation_meas}
@@ -271,95 +292,13 @@ Another aspect that needs to be accounted for when running the particle filter a
 \label{fig:orient_camera}
 \end{figure}
 
-Assuming that the robot will always have an orientation between $[-\pi, \pi]$, analytical geometry can be used to determine the angle formed by the camera's X-axis and the line connecting the two blue balls. This corresponds exactly to computing the slope of a line, determined by two points:
+Assuming that the robot will always have an orientation between $(-\pi, \pi]$, analytical geometry can be used to determine the angle formed by the camera's X-axis and the line connecting the two blue balls. This corresponds exactly to computing the slope of a line, determined by two points:
+
 \begin{equation}
 a=\frac{y_2-y_1}{x_2-x_1}
 \end{equation}
 
-In order to obtain an estimated angle between $[-\pi, \pi]$, the \texttt{atan2} function is used when implementing the formula in \texttt{C++}.
-
-% An example of a floating figure using the graphicx package.
-% Note that \label must occur AFTER (or within) \caption.
-% For figures, \caption should occur after the \includegraphics.
-% Note that IEEEtran v1.7 and later has special internal code that
-% is designed to preserve the operation of \label within \caption
-% even when the captionsoff option is in effect. However, because
-% of issues like this, it may be the safest practice to put all your
-% \label just after \caption rather than within \caption{}.
-%
-% Reminder: the "draftcls" or "draftclsnofoot", not "draft", class
-% option should be used if it is desired that the figures are to be
-% displayed while in draft mode.
-%
-%\begin{figure}[!t]
-%\centering
-%\includegraphics[width=2.5in]{myfigure}
-% where an .eps filename suffix will be assumed under latex,
-% and a .pdf suffix will be assumed for pdflatex; or what has been declared
-% via \DeclareGraphicsExtensions.
-%\caption{Simulation Results.}
-%\label{fig_sim}
-%\end{figure}
-
-% Note that IEEE typically puts floats only at the top, even when this
-% results in a large percentage of a column being occupied by floats.
-
-
-% An example of a double column floating figure using two subfigures.
-% (The subfig.sty package must be loaded for this to work.)
-% The subfigure \label commands are set within each subfloat command,
-% and the \label for the overall figure must come after \caption.
-% \hfil is used as a separator to get equal spacing.
-% Watch out that the combined width of all the subfigures on a
-% line do not exceed the text width or a line break will occur.
-%
-%\begin{figure*}[!t]
-%\centering
-%\subfloat[Case I]{\includegraphics[width=2.5in]{box}%
-%\label{fig_first_case}}
-%\hfil
-%\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
-%\label{fig_second_case}}
-%\caption{Simulation results.}
-%\label{fig_sim}
-%\end{figure*}
-%
-% Note that often IEEE papers with subfigures do not employ subfigure
-% captions (using the optional argument to \subfloat[]), but instead will
-% reference/describe all of them (a), (b), etc., within the main caption.
-
-
-% An example of a floating table. Note that, for IEEE style tables, the
-% \caption command should come BEFORE the table. Table text will default to
-% \footnotesize as IEEE normally uses this smaller font for tables.
-% The \label must come after \caption as always.
-%
-%\begin{table}[!t]
-%% increase table row spacing, adjust to taste
-%\renewcommand{\arraystretch}{1.3}
-% if using array.sty, it might be a good idea to tweak the value of
-% \extrarowheight as needed to properly center the text within the cells
-%\caption{An Example of a Table}
-%\label{table_example}
-%\centering
-%% Some packages, such as MDW tools, offer better commands for making tables
-%% than the plain LaTeX2e tabular which is used here.
-%\begin{tabular}{|c||c|}
-%\hline
-%One & Two\\
-%\hline
-%Three & Four\\
-%\hline
-%\end{tabular}
-%\end{table}
-
-
-% Note that IEEE does not put floats in the very first column - or typically
-% anywhere on the first page for that matter. Also, in-text middle ("here")
-% positioning is not used. Most IEEE journals use top floats exclusively.
-% Note that, LaTeX2e, unlike IEEE journals, places footnotes above bottom
-% floats. This can be corrected via the \fnbelowfloat command of the
-% stfloats package.
+In order to obtain an estimated angle between $(-\pi, \pi]$, the \texttt{atan2} function is used when implementing the formula in \texttt{C++}.
 
 \section{User Movement through Activity Monitoring}
 
