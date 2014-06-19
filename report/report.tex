@@ -38,7 +38,7 @@
   \usepackage[caption=false,font=footnotesize]{subfig}
 \fi
 
-\usepackage{fixltx2e}
+%\usepackage{fixltx2e}
 
 \usepackage{stfloats}
 
@@ -77,11 +77,13 @@ used for lifting heavy loads over long distances. The robot has really simple
 hardware, instead all the computations and sensing are done on the smartphone.
 A particle filter is used to localize the location and orientation.
 Measurements of the distance, orientation and heading are done by the phone's
-camera. The accelerometer sensor is used to detect walking activity and user
-orientation, which updates the particles of the filter. The robot is controlled
-by a \texttt{IOIO} board, a simple hardware device that directly follows
-commands from the phone through a Bluetooth connection. We have found that it is awesome
-
+camera using object tracking. The accelerometer sensor is used to detect
+walking activity, with a kNN classifier, and user orientation, which updates
+the particles of the filter. The robot is controlled by a \texttt{IOIO} board,
+a simple hardware device that directly follows commands from the phone through
+a Bluetooth connection. We found that the localization with the particle filter
+is working well. Measuring the distance with the camera works well as well, but
+only for smaller distances.
 
 \end{abstract}
 
@@ -159,8 +161,8 @@ to the location with the highest probability the robot is. There are multiple
 techniques for resampling \cite{douc2005comparison}. We implemented the
 simple Multinomial resampling. Figure~\ref{fig:particle-measurement} shows a
 3-dimensional plot of the particles.
-
-\begin{figure}[!hpb]
+%
+\begin{figure}[htpb]
  \centering
  \includegraphics[width=3in]{images/particle-measure.pdf}
  \caption{Weight of particles after a distance measurement. Then the particles
@@ -169,16 +171,15 @@ of the red are higher. Finally a heading measurement was executed, which
 inreases the weight of the particles in a certain direction.}
  \label{fig:particle-measurement}
 \end{figure}
-
-
+%
 \textbf{Movement phase} is where movements are applied to the particles. There
 are four types of movement: 1) when the robot is commanded to rotate or 2) move,
 or 3) when the user moves or 4) rotates. Figure~\ref{fig:particle-move} shows
 how the particles move. A move has a certain uncertainty, which is why the
 actual move of a particle is drawn from an probability with the original move
 as mean.
-
-\begin{figure}[!hpb]
+%
+\begin{figure}[htpb]
  \centering
  \includegraphics[width=3in]{images/particle-move.pdf}
  \caption{The blue particles is the initial belief, centered around (0,0). Then
@@ -188,7 +189,7 @@ means the particles will be on the right side of the user. Here the spread,
 due to the probability, is clearly visible.}
  \label{fig:particle-move}
 \end{figure}
-
+%
 The iterations of measuring, resampling and movements constantly update the
 particles. Each type of measurement of movement will be explained in the
 following sections.
@@ -202,40 +203,43 @@ the phone's camera for detecting and tracking three colored spherical objects
 (two blue balls and one green ball) that are placed on the top of the robot.
 
 We first start off by converting the colored image from the standard RGB geometry into the HSV (Hue-Saturation-Value) representation. This is done due to the fact that it is much easier to filter out a range of colors in the HSV representation than in the normal RGB case. The HSV color cylinder is presented in figure~\ref{fig:sim}.
-
-\begin{figure}[!hpb]
+%
+\begin{figure}[htpb]
  \centering
 \includegraphics[width=2in]{images/hsv_representation}
 \caption{Hue-Saturation-Value color cylinder}
 \label{fig:sim}
 \end{figure}
-
+%
 Using this representation, the images from the phone's camera can be thresholded based on the colors they contain. Since we are interested in detecting blue and green objects, a set of minimum and maximum bounds has been defined for each of the colors.
 
 The thresholding procedure results in two different images, i.e. one containing data for the color blue and the other one for the color green. These two images are combined into one through the use of an \texttt{OR} operation. This process is shown in Figure \ref{fig:thresh}.
-\begin{figure}[!hpb]
+%
+\begin{figure}[htpb]
  \centering
 \includegraphics[width=3in]{images/thresholding}
 \caption{Image thresholding}
 \label{fig:thresh}
 \end{figure}
-
+%
 Having the thresholded image obtained, the Circle Hough Transform (CHT) can be applied in order to obtain the three circles present in the image, and track them.
 
 The basic idea underlying the Hough Transform is that, given an image containing a circle described as:
+%
 \begin{equation}
 \left(x-a\right)^2 + \left(y-b\right)^2 = r^2
 \end{equation}
 where $(a,b)$ are the coordinates of the circle's center and $r$ is its radius, an arbitrary edge point $(x_i, y_i)$ will be transformed into a right circular cone in the $(a,b,r)$ parameter space. If the image points lie in a circle, then the cones will intersect at a single point in $(a,b,r)$, corresponding to the parameters of the circle \cite{yuen1990cht}.
 
 The CHT is also capable of finding circles that are partially hidden, if enough of their boundary is visible. This feature is especially important for the project, since the lighting conditions are not perfect, resulting in parts of the tracking balls that will not be contained in the thresholded image. Such a case is presented in Figure \ref{fig:cht}.
-\begin{figure}[!hpb]
+%
+\begin{figure}[htpb]
  \centering
 \includegraphics[width=3in]{images/cht_incomplete}
 \caption{Circle detection using Hough Transform. Left: Thresholded image, with detected circles. Right: RGB image (in imperfect lighting conditions), with detected circles}
 \label{fig:cht}
 \end{figure}
-
+%
 As it can be observed, the Hough Transform achieves circle detection even if the image does not contain the entire shape (in this case, almost the entire green ball is missing).
 
 The presented detection method has been implemented, with the help of the \texttt{OpenCV} library, in \texttt{C++}, and it was imported in the Android application through the \texttt{JNI} (Java Native Interface).
@@ -247,14 +251,16 @@ In order to obtain a decently accurate distance estimation between the robot and
 The idea to use the integrated phone camera has been considered due to already having a working spherical object tracking algorithm, thus, we would only have to extend this algorithm to incorporate distance estimation.
 
 From a geometrical point of view, the user to robot distance estimation is presented in Figure \ref{fig:dist_camera}.
-\begin{figure}[!hpb]
+%
+\begin{figure}[htpb]
  \centering
 \includegraphics[width=2in]{images/distance_meas}
 \caption{Side-view of the distance estimation, using the phone camera. Phone-robot distance is represented by $d_p$, user-robot distance is represented by $d_u$, and the skew angle is represented by $b$}
 \label{fig:dist_camera}
 \end{figure}
-
+%
 It can be observed that the user-robot distance $d_u$ can be obtained by simply applying the following formula:
+
 \begin{equation}
 d_u=d_pcos(b)
 \label{eq:dist_estim}
@@ -282,13 +288,14 @@ Having the phone-robot distance and the skew angle estimates, the user-robot est
 Another method of estimating the distance between the user and the robot is by making use of the RSS signal coming from the Bluetooth connection between the Android phone and the robot.
 
 However, the method has been quickly dismissed due to extremely poor measurement results. Two main problems have been encountered. In the first place, RSS measurements did not have a deterministic sampling time, which is detrimental in the case of robot control applications. Secondly, the measured signal is very noisy, which also leads to an inaccurate distance measurement. The results obtained after repeated measurements of the RSS signal, at different distances is presented in Figure \ref{fig:rss}.
-\begin{figure}[!hpb]
+%
+\begin{figure}[htpb]
  \centering
 \includegraphics[width=3in]{images/rss_variance}
 \caption{Top-view of the orientation estimation, using the phone camera}
 \label{fig:rss}
 \end{figure}
-
+%
 It can easily be observed that the RSS signal is extremely noisy and would not yield good results in estimating relatively short distances.
 
 Having implemented and tested both distance estimation techniques, the decision to integrate the camera distance estimations in the particle filter algorithm is implicit.
@@ -296,14 +303,14 @@ Having implemented and tested both distance estimation techniques, the decision 
 \subsection{Orientation Estimation}
 
 Another aspect that needs to be accounted for when running the particle filter algorithm, is the robot's orientation with respect to the user. A schematic is presented in Figure \ref{fig:orient_camera}, where $a$ is the robot's orientation with respect to the user.
-
-\begin{figure}[!hpb]
+%
+\begin{figure}[htpb]
  \centering
 \includegraphics[width=2in]{images/orientation_meas}
 \caption{Top-view of the orientation estimation, using the phone camera}
 \label{fig:orient_camera}
 \end{figure}
-
+%
 Assuming that the robot will always have an orientation between $(-\pi, \pi]$, analytical geometry can be used to determine the angle formed by the camera's X-axis and the line connecting the two blue balls. This corresponds exactly to computing the slope of a line, determined by two points:
 
 \begin{equation}
@@ -358,14 +365,14 @@ $P(\vec x)$ are calculated by:
 The kNN classifier consists out of two phases: a learning phase, where feature
 vectors with a known class (activity in this case) are stored. This results in
 in a plot like figure~\ref{fig:knn-data}.
-
-\begin{figure}[!hpb]
+%
+\begin{figure}[htpb]
  \centering
   \includegraphics[width=3in]{images/knn-data.pdf}
   \caption{kNN Learning data}
   \label{fig:knn-data}
 \end{figure}
-
+%
 The second phase is the classification phase. A newly measured feature vector
 is compared with the learning data. By selecting the $n$ nearest neighbors,
 counting how many points each class has and finally selecting the class with
@@ -408,14 +415,16 @@ The robot rotation is similar to the robot movement model in the sense that it i
 By combining all the previously described components into the particle filter, robot distance and orientation estimates, with respect to the user, are obtained even when the filter does not receive measurements from the camera. This allows the development of one \texttt{ON-OFF} controller used to keep the robot's orientation around $0$ radians, and a second one used to maintain a certain distance between the robot and the user.
 
 \section{Experimental Setup and Used Libraries}
+
 The project's experimental setup consists of a small-scale, 4-wheeled, $206\mathrm{x}200\mathrm{x}62\ mm$ robotic chassis, controlled by a \texttt{IOIO} board with the help of an \texttt{L298N} H-bridge module. The \texttt{IOIO} board communicates with the Android smart phone through a Bluetooth connection, achieved with the help of the \texttt{LogiLink} Class 1 Bluetooth dongle. On top of the setup, the three, previously mentioned, colored balls are placed. The robot chassis is presented in Figure \ref{fig:robot}.
-\begin{figure}[!hpb]
+%
+\begin{figure}[htpb]
  \centering
   \includegraphics[width=1.5in]{images/robot}
   \caption{Robot chassis used for the project. It has four independent DC motors, controlling each wheel separately.}
   \label{fig:robot}
 \end{figure}
-
+%
 The smart phones used in developing the Android application are the following: HTC Desire V, running Android 4.0.3 (Ice-Cream Sandwich) and Sony Xperia SP, running Android 4.3 (Jelly Bean).
 
 The libraries used for developing the different modules of the application, excluding the \texttt{Android API}, were: the \texttt{OpenCV} libraries for computer vision and image processing, used in detecting the robot, and estimating its distance and orientation with respect to the user; the \texttt{IOIO API} was used in order to communicate with the \texttt{IOIO} board and to use the board's features. Also, the \texttt{Java} classes, used for the density and quantile computations (contained in the \texttt{nl.tudelft.followbot.math} package), are part of the \texttt{PAL 1.4} phylogenetic analysis library.
