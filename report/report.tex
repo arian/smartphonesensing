@@ -75,15 +75,15 @@ A smartphone application that controls a simple moving robot such that the
 robot always follows the user has been built. Potentially this robot can be
 used for lifting heavy loads over long distances. The robot has really simple
 hardware, instead all the computations and sensing are done on the smartphone.
-A particle filter is used to localize the location and orientation.
-Measurements of the distance, orientation and heading are done by the phone's
-camera using object tracking. The accelerometer sensor is used to detect
-walking activity, with a kNN classifier, and user orientation, which updates
-the particles of the filter. The robot is controlled by a \texttt{IOIO} board,
-a simple hardware device that directly follows commands from the phone through
-a Bluetooth connection. We found that the localization with the particle filter
-is working well. Measuring the distance with the camera works well as well, but
-only for smaller distances.
+A particle filter is used to localize the location and orientation of the
+robot.  Measurements of the distance, orientation and heading are done by the
+phone's camera using object tracking. The accelerometer sensor is used to
+detect walking activity, with a kNN classifier, and user orientation, which
+updates the particles of the filter. The robot is controlled by a \texttt{IOIO}
+board, a simple hardware device that directly follows commands from the phone
+through a Bluetooth connection. We found that the localization with the
+particle filter is working well. Measuring the distance with the camera works
+well as well, but only for smaller distances.
 
 \end{abstract}
 
@@ -100,9 +100,9 @@ The smartphone acts as the mother (moved by the user) and the robot as the baby
 goose. The objective of the robot is to follow the smartphone and, thus, the
 person carrying it. This kind of behavior can be used to great effect in moving
 very heavy loads over long distances, eliminating the need to constantly
-control the robot. Using computational power and sensors of today's smartphones
-specialized and expensive hardware can be eliminated. Instead we can use a
-device that many people already have.
+control the robot. Using computational power and sensors of today's
+smartphones, specialized and expensive hardware can be eliminated. Instead we
+can use a device that many people already have.
 
 We have built an Android smart phone application that controls a remote,
 wheeled robot. This robot can move forward and backwards, and turn left or
@@ -145,13 +145,13 @@ the weight of the particle with $\sum_{n=1}^N w_n = 1$.
 
 The particle filter proceeds in three phases. First an \textbf{initial belief
 distribution} is created. Here $N$ Particles are randomly distributed around the
-origin. This is only executed once.
+origin. This is executed only once.
 
 The next phase is the \textbf{measurement phase}. In this phase measurements
 are executed. Measured values are the distance to the robot, the orientation of
 the robot and the heading. The heading is the angle between the user and robot:
-0 degrees if the robot is exactly in front of the user, +90 degrees if the
-robot is on the left side of the user and -90 degrees if it is on the right
+0 degrees if the robot is exactly in front of the user, $+90$ degrees if the
+robot is on the left side of the user and $-90$ degrees if it is on the right
 side. Each particle is assigned a weight depending on the measurement, e.g.\
 given this measured distance, what is the probability that the distance is
 actually the distance of this particle using a Gaussian distribution.
@@ -160,7 +160,8 @@ actually the distance of this particle using a Gaussian distribution.
 to the location with the highest probability the robot is. There are multiple
 techniques for resampling \cite{douc2005comparison}. We implemented the
 simple Multinomial resampling. Figure~\ref{fig:particle-measurement} shows a
-3-dimensional plot of the particles.
+3-dimensional plot of the particles after a distance measurement, resampling
+and a heading measurement.
 %
 \begin{figure}[htpb]
  \centering
@@ -171,7 +172,7 @@ of the red are higher. Finally a heading measurement was executed, which
 inreases the weight of the particles in a certain direction.}
  \label{fig:particle-measurement}
 \end{figure}
-%
+
 \textbf{Movement phase} is where movements are applied to the particles. There
 are four types of movement: 1) when the robot is commanded to rotate or 2) move,
 or 3) when the user moves or 4) rotates. Figure~\ref{fig:particle-move} shows
@@ -182,14 +183,14 @@ as mean.
 \begin{figure}[htpb]
  \centering
  \includegraphics[width=3in]{images/particle-move.pdf}
- \caption{The blue particles is the initial belief, centered around (0,0). Then
- a user movement of 30 is executed. As the user is always at (0,0), this means
-that all particles move around -30. Finally rotates 90 degrees clock-wise,
+ \caption{The blue particles is the initial belief, centered around $(0,0)$. Then
+ a user movement of $30$ is executed. As the user is always at $(0,0)$, this means
+that all particles move around $-30$. Finally rotates $90$ degrees clock-wise,
 means the particles will be on the right side of the user. Here the spread,
 due to the probability, is clearly visible.}
  \label{fig:particle-move}
 \end{figure}
-%
+
 The iterations of measuring, resampling and movements constantly update the
 particles. Each type of measurement of movement will be explained in the
 following sections.
