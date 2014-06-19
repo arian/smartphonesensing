@@ -140,16 +140,24 @@ inreases the weight of the particles in a certain direction.}
 \textbf{Movement phase} is where movements are applied to the particles. There
 are four types of movement: 1) when the robot is commanded to rotate or 2) move,
 or 3) when the user moves or 4) rotates. Figure~\ref{fig:particle-move} shows
-how the particles move.
+how the particles move. A move has a certain uncertainty, which is why the
+actual move of a particle is drawn from an probability with the original move
+as mean.
 
 \begin{figure}[!htpb]
  \centering
  \includegraphics[width=3in]{images/particle-move.pdf}
- \caption{Weight of particles after a distance measurement. Then the particles
-inreases the weight of the particles in a certain direction.}
+ \caption{The blue particles is the initial belief, centered around (0,0). Then
+ a user movement of 30 is executed. As the user is always at (0,0), this means
+that all particles move around -30. Finally rotates 90 degrees clock-wise,
+means the particles will be on the right side of the user. Here the spread,
+due to the probability, is clearly visible.}
  \label{fig:particle-move}
 \end{figure}
 
+The iterations of measuring, resampling and movements constantly update the
+particles. Each type of measurement of movement will be explained in the
+following sections.
 
 \section{Measuring distance and orientation with Camera}
 
@@ -224,9 +232,9 @@ In order to obtain an estimate of $d_p$, the radius values of the closest circle
 d_p=-\frac{24}{31}r_{max}+\frac{1995}{31}
 \end{equation}
 
-The skew angle $b$ is estimated in a similar fashion. Considering that the tracking balls are placed in an equilateral triangle shape, a skew angle of $90^{\circ}$ (phone is directly above the robot) corresponds to reading an angle of $60^{\circ}$ from the triangle determined by the tracking objects. 
+The skew angle $b$ is estimated in a similar fashion. Considering that the tracking balls are placed in an equilateral triangle shape, a skew angle of $90^{\circ}$ (phone is directly above the robot) corresponds to reading an angle of $60^{\circ}$ from the triangle determined by the tracking objects.
 
-Furthermore, when the skew angle decreases, one of the angles will always increase, while the other two decrease. Thus, for a skew angle of $0^{\circ}$, we know that one of the angles of the triangle, determined by the tracking balls, will be very close to $180^{\circ}$. 
+Furthermore, when the skew angle decreases, one of the angles will always increase, while the other two decrease. Thus, for a skew angle of $0^{\circ}$, we know that one of the angles of the triangle, determined by the tracking balls, will be very close to $180^{\circ}$.
 
 Using these two points, and assuming that the relation between the skew angle and the triangle angles is linear, the skew angle $b$ can be defined as
 \begin{equation}
@@ -332,7 +340,7 @@ Another method of estimating the distance between the user and the robot is by m
 % floats. This can be corrected via the \fnbelowfloat command of the
 % stfloats package.
 
-\section{Activity Monitoring}
+\section{User Movement through Activity Monitoring}
 
 When the user moves the particle filter should be updated. To know when the
 user is moving can be done with Activity Monitoring. Activity monitoring uses
