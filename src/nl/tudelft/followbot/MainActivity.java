@@ -1,5 +1,7 @@
 package nl.tudelft.followbot;
 
+import ioio.lib.util.android.IOIOActivity;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Observable;
@@ -10,6 +12,7 @@ import nl.tudelft.followbot.camera.CameraEstimator;
 import nl.tudelft.followbot.data.DataStack;
 import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.filters.particle.Filter;
+import nl.tudelft.followbot.ioio.IOIOLoop;
 import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
@@ -24,7 +27,6 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
-import android.app.Activity;
 import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
@@ -37,7 +39,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity {
+public class MainActivity extends IOIOActivity {
 
 	/**
 	 * Standard deviation of a camera distance measurement
@@ -135,6 +137,13 @@ public class MainActivity extends Activity {
 	 * The Particle Filter object
 	 */
 	private Filter filter;
+
+	/* Creates a IOIO loop that interfaces with the IOIO board via Bluetooth */
+	@Override
+	protected IOIOLoop createIOIOLooper() {
+		return new IOIOLoop();
+	}
+
 	/**
 	 * Periodical task to measure values and to sense user activity.
 	 */
@@ -145,6 +154,7 @@ public class MainActivity extends Activity {
 			senseUserActivity(millis);
 		}
 	};
+
 	/**
 	 * Periodical task to plot the particle filter or the KNN data points
 	 */
