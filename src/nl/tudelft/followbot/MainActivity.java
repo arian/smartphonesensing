@@ -26,7 +26,6 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
@@ -34,7 +33,18 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class MainActivity extends IOIOActivity {
-
+	/**
+	 * Reference distance in [m] for the robot to track
+	 */
+	private static final double REFERENCE_DISTANCE = 1.5;
+	/**
+	 * Tolerance for robot reference tracking
+	 */
+	private static final double TOLERANCE_DISTANCE_TRACKING = 0.3;
+	/**
+	 * Tolerance for robot orientation angle tracking
+	 */
+	private static final double TOLERANCE_ORIENTATION_TRACKING = 0.1;
 	/**
 	 * Standard deviation of a camera distance measurement
 	 */
@@ -123,6 +133,10 @@ public class MainActivity extends IOIOActivity {
 	 * The Particle Filter object
 	 */
 	private Filter filter;
+	/**
+	 * Initial measurement flag
+	 */
+	private boolean initialMeasurement;
 
 	/**
 	 * Creates a IOIO loop that interfaces with the IOIO board via Bluetooth and
@@ -139,7 +153,7 @@ public class MainActivity extends IOIOActivity {
 	private final Periodical measurePeriodical = new Periodical() {
 		@Override
 		public void run(long millis) {
-			measureRobot();
+			controlRobot();
 			senseUserActivity(millis);
 		}
 	};
@@ -193,6 +207,8 @@ public class MainActivity extends IOIOActivity {
 		setContentView(R.layout.activity_main);
 
 		SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+		initialMeasurement = true;
 
 		// store latest acceleration data
 		accel = new LinearAccelerometer(sm);
@@ -375,33 +391,90 @@ public class MainActivity extends IOIOActivity {
 	}
 
 	/**
-	 * Read camera measurements to add weights to particles and resample
+	 * Control robot based on obtained estimations from the particle filter
 	 */
-	public void measureRobot() {
+	public void controlRobot() {
 
 		// if the robot is seen by the camera, then use measurements to
 		// update the particle filter
 		if (cameraEstimation.robotSeen()) {
 
-			double d = cameraEstimation.getDistance() / 100;
-			double a = cameraEstimation.getOrientation();
+			// if this is the first measurement, only update the weights,
+			// get the prior and resample
+			if (initialMeasurement) {
+				double d = cameraEstimation.getDistance() / 100;
+				double a = cameraEstimation.getOrientation();
 
-			// camera distance measurement with x [m] deviation
-			filter.distanceMeasurement(d, MEASURE_DISTANCE_NOISE);
-			filter.resample();
+				// camera distance measurement with x [m] deviation
+				filter.distanceMeasurement(d, MEASURE_DISTANCE_NOISE);
+				filter.resample();
 
-			// camera orientation measurement with x [rad] deviation
-			filter.orientationMeasurement(a, MEASURE_ORIENTATION_NOISE);
-			filter.resample();
+				// camera orientation measurement with x [rad] deviation
+				filter.orientationMeasurement(a, MEASURE_ORIENTATION_NOISE);
+				filter.resample();
 
-			filter.headingMeasurement(0, MEASURE_HEADING_NOISE);
-			filter.resample();
+				filter.headingMeasurement(0, MEASURE_HEADING_NOISE);
+				filter.resample();
 
-			Log.d(TAG,
-					"=> " + d + " @ " + a + "-------------"
-							+ filter.getDistanceEstimate() + "@"
-							+ filter.getOrientationEstimate());
+				// initial measurement complete
+				initialMeasurement = false;
+			} else {
+				/*
+				 * measure and resample
+				 */
+				double d = cameraEstimation.getDistance() / 100;
+				double a = cameraEstimation.getOrientation();
+
+				// camera distance measurement with x [m] deviation
+				filter.distanceMeasurement(d, MEASURE_DISTANCE_NOISE);
+				filter.resample();
+
+				// camera orientation measurement with x [rad] deviation
+				filter.orientationMeasurement(a, MEASURE_ORIENTATION_NOISE);
+				filter.resample();
+
+				filter.headingMeasurement(0, MEASURE_HEADING_NOISE);
+				filter.resample();
+
+				/*
+				 * move robot
+				 */
+				// move forward if too far (ON-OFF controller)
+				if (d > REFERENCE_DISTANCE + TOLERANCE_DISTANCE_TRACKING) {
+					// IOIO motor control (make robot go forward)
+					MotorController
+							.robotMove(MotorController.ROBOT_MOVE_FORWARD);
+
+					// Knowing the traveled distance of the robot at each time
+					// instant, we can update the particles in the filter
+					// E.g.: if we sample every 100 ms -> robot moves 10 cm in
+					// that time
+					// filter.robotMove(10, 2);
+				}
+				/*
+				 * if ((Math.abs(a) > ORIENTATION_TOLERANCE)) { // if the robot
+				 * is pointing towards the right -> make it // turn left;
+				 * otherwise -> make it turn right if (a < 0) { // IOIO motor
+				 * control (rotate robot)
+				 * 
+				 * 
+				 * // Same as with moving forward: we know how much it // turns
+				 * between samples -> we can update particles: // 10 degrees per
+				 * sample orientationPF.robotRotate(10, 2); } else { // IOIO
+				 * motor control (rotate robot)
+				 * 
+				 * // Same as with moving forward: we know how much it // turns
+				 * between samples -> we can update particles: // -10 degrees
+				 * per sample orientationPF.robotRotate(-10, 2); } }
+				 */
+			}
+		}
+		// robot is not seen by the camera anymore -> use movement
+		// estimations if we already have an initial measurement, otherwise
+		// wait for the user to make one camera measurement
+		else if (!initialMeasurement) {
+			// TODO: apply the movement methods and estimate distance and
+			// orientation
 		}
 	}
-
 }
