@@ -31,6 +31,12 @@
         android:title="@string/action_cal_walk"/>
 
     <item
+        android:id="@+id/action_save_cal"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/action_save_cal"/>
+
+    <item
         android:id="@+id/action_clear_cal"
         android:orderInCategory="100"
         android:showAsAction="never"

@@ -26,7 +26,7 @@ public class AccelerometerCalibration extends Observable {
 	SensorSink sensorListener = new SensorSink() {
 		@Override
 		public void push(SensorEvent event) {
-			data.push(new float[] { event.timestamp, event.values[0],
+			data.push(new float[] { (event.timestamp / 1e9f), event.values[0],
 					event.values[1], event.values[2] });
 		}
 	};

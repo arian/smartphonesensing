@@ -2,20 +2,15 @@ package nl.tudelft.followbot;
 
 import ioio.lib.util.android.IOIOActivity;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
-import nl.tudelft.followbot.calibration.AccelerometerCalibration;
 import nl.tudelft.followbot.camera.CameraEstimator;
 import nl.tudelft.followbot.data.DataStack;
 import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.filters.particle.Filter;
 import nl.tudelft.followbot.ioio.MotorController;
 import nl.tudelft.followbot.knn.FeatureVector;
-import nl.tudelft.followbot.knn.KNN;
-import nl.tudelft.followbot.knn.KNNClass;
 import nl.tudelft.followbot.plot.ScatterPlotView;
 import nl.tudelft.followbot.sensors.LinearAccelerometer;
 import nl.tudelft.followbot.sensors.OrientationCalculator;
@@ -37,7 +32,6 @@ import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class MainActivity extends IOIOActivity {
 
@@ -114,17 +108,9 @@ public class MainActivity extends IOIOActivity {
 	 */
 	private double pYaw = Double.MIN_VALUE;
 	/**
-	 * KNN Classifier
+	 * Activiy Monitor
 	 */
-	private final KNN knn = new KNN();
-	/**
-	 * KNN Class object for the "stand" activity
-	 */
-	private final KNNClass standClass = new KNNClass("stand");
-	/**
-	 * KNN Class object for the "walk" activity
-	 */
-	private final KNNClass walkClass = new KNNClass("walk");
+	private ActivityMonitor activityMonitor;
 	/**
 	 * View element which is used to draw a scatter plot
 	 */
@@ -163,22 +149,10 @@ public class MainActivity extends IOIOActivity {
 	 */
 	private final Periodical plotPeriodical = new Periodical() {
 
-		public double[][] getKNNData() {
-			float[][] fs = knn.getNormalizedFeatures();
-			ArrayList<FeatureVector> fvs = knn.getFeatures();
-			double[][] d = new double[3][fs.length];
-			for (int i = 0; i < fs.length; i++) {
-				float[] f = fs[i];
-				d[0][i] = f[0];
-				d[1][i] = f[1];
-				d[2][i] = (fvs.get(i).getKNNClass() == walkClass) ? 1 : 0;
-			}
-			return d;
-		}
-
 		@Override
 		public void run(long millis) {
-			double[][] data = plotKNN ? getKNNData() : filter.getPositions();
+			double[][] data = plotKNN ? activityMonitor.getKNNData() : filter
+					.getPositions();
 			plotView.plot(data);
 
 			double distance = filter.getDistanceEstimate();
@@ -247,6 +221,10 @@ public class MainActivity extends IOIOActivity {
 		// The partial filter
 		filter = new Filter().fill(FILTER_PARTICLES_COUNT,
 				FILTER_PARTICLES_INITIAL_DISTANCE);
+
+		// activity monitor
+		activityMonitor = new ActivityMonitor(this, accel);
+		activityMonitor.loadFromFile();
 
 		// plotter
 		plotView = new ScatterPlotView(this);
@@ -334,50 +312,21 @@ public class MainActivity extends IOIOActivity {
 			cameraEstimation.setViewMode(CameraEstimator.VIEW_MODE_OD_RGBA);
 			break;
 		case R.id.action_cal_stand:
-			calibrateActivity(standClass,
-					getString(R.string.toast_stand_finished));
+			activityMonitor.calibrateStandActivity();
 			break;
 		case R.id.action_cal_walk:
-			calibrateActivity(walkClass,
-					getString(R.string.toast_walk_finished));
+			activityMonitor.calibrateWalkActivity();
 			break;
 		case R.id.action_clear_cal:
-			knn.clear();
+			activityMonitor.clear();
+		case R.id.action_save_cal:
+			activityMonitor.saveToFile();
+			break;
 		case R.id.action_switch_plot:
 			plotKNN = !plotKNN;
 			break;
 		}
 		return true;
-	}
-
-	/**
-	 * Add new data point to the activity detection KNN classifier
-	 * 
-	 * @param klass
-	 * @param msg
-	 */
-	private void calibrateActivity(final KNNClass klass, final CharSequence msg) {
-		final int calibrationTime = 4 * 1000;
-		final AccelerometerCalibration cal = new AccelerometerCalibration(
-				accel, calibrationTime);
-		final Context context = getApplicationContext();
-
-		cal.addObserver(new Observer() {
-			@Override
-			public void update(Observable observable, Object data) {
-				DataStack<float[]> ds = cal.getData();
-				float[] d = FeatureExtractor.extractFeaturesFromFloat4(ds);
-
-				LogFile.appendLog(new File(context.getExternalCacheDir(),
-						"logs5.csv"), String.format("%f,%f,%d", d[0], d[1],
-						klass == walkClass ? 1 : 0));
-
-				FeatureVector feature = new FeatureVector(klass, d);
-				knn.add(feature);
-				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-			}
-		});
-		cal.start();
 	}
 
 	public void senseUserActivity(long millis) {
@@ -395,14 +344,13 @@ public class MainActivity extends IOIOActivity {
 		FeatureVector feature = new FeatureVector(null,
 				FeatureExtractor.extractFeaturesFromFloat4(accelStack));
 
-		// classify measured values, with KNN classifier. Take 3 points
-		KNNClass klass = knn.classify(feature, 3);
+		activityMonitor.detectActivity(feature);
 
-		if (klass != null) { // if there was calibration before
+		if (activityMonitor.isWalking() || activityMonitor.isStanding()) {
 			TextView tv = (TextView) findViewById(R.id.activity_output);
-			tv.setText(klass.getName());
+			tv.setText(activityMonitor.getClassName());
 
-			if (millis > 0 && klass == walkClass) {
+			if (millis > 0 && activityMonitor.isWalking()) {
 				filter.userMove(1000 / millis * USER_MOVE_SPEED,
 						USER_MOVE_NOISE);
 				return;

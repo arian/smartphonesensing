@@ -1,6 +1,5 @@
 package nl.tudelft.followbot.data;
 
-
 public class FeatureExtractor {
 
 	private final DataStack<Float> data;
@@ -43,8 +42,7 @@ public class FeatureExtractor {
 					FeatureExtractor f = FeatureExtractor.fromFloat4(data, 0);
 
 					// Scale zero crossings so it has more or less the same
-					// range
-					// as the power
+					// range as the power
 					float[] vs = new float[] { (f.zeroCrossings()) / time,
 							f.avgPower() / data.getSize() };
 
