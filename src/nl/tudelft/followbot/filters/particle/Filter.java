@@ -44,10 +44,16 @@ public class Filter {
 			double a = 2 * Math.PI * random.get(i, N);
 
 			// orientation is between [-pi; pi] degrees
-			double orientation = Math.PI * (2 * random.get(i, N) - 1);
+			// double orientation = Math.PI * (2 * random.get(i, N) - 1);
+			double orientation = 0;
 
-			Particle p = new Particle(r * Math.cos(a), r * Math.sin(a),
-					orientation);
+			double x = 0;
+			double y = -10.0;
+
+			// Particle p = new Particle(r * Math.cos(a), r * Math.sin(a),
+			// orientation);
+			Particle p = new Particle(x, y, orientation);
+
 			p.setWeight(1.0 / N);
 			particles.add(p);
 		}

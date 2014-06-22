@@ -8,16 +8,20 @@ import ioio.lib.util.BaseIOIOLooper;
 import android.util.Log;
 
 public class MotorController extends BaseIOIOLooper {
+
 	// Inverted due to open-drain settings
-	private static final float MOTOR_SPEED_FORWARD = (float) 0.2;
-	private static final float MOTOR_SPEED_ROTATE = (float) 0.0;
+	private static final float MOTOR_SPEED_FORWARD = 0.2f;
+	private static final float MOTOR_SPEED_ROTATE = 0.0f;
 
 	public static final int ROBOT_MOVE_FORWARD = 1;
 	public static final int ROBOT_ROTATE_LEFT = 2;
 	public static final int ROBOT_ROTATE_RIGHT = 3;
+	public static final int ROBOT_STOP = 4;
 
 	private static float rightSideSpeed;
 	private static float leftSideSpeed;
+
+	public static boolean ioioConnected;
 
 	private PwmOutput rightSide;
 	private PwmOutput leftSide;
@@ -29,7 +33,11 @@ public class MotorController extends BaseIOIOLooper {
 		leftSide = ioio_.openPwmOutput(new DigitalOutput.Spec(13,
 				Mode.OPEN_DRAIN), 1000);
 
+		rightSideSpeed = 1.0f;
+		leftSideSpeed = 1.0f;
+
 		Log.d("IOIO", "IOIO setup complete");
+		ioioConnected = true;
 	}
 
 	@Override
@@ -42,18 +50,27 @@ public class MotorController extends BaseIOIOLooper {
 
 	@Override
 	public void disconnected() {
+		ioioConnected = false;
 	}
 
 	public static void robotMove(int movement) {
-		if (movement == ROBOT_MOVE_FORWARD) {
+		switch (movement) {
+		case ROBOT_MOVE_FORWARD:
 			rightSideSpeed = MOTOR_SPEED_FORWARD;
 			leftSideSpeed = MOTOR_SPEED_FORWARD;
-		} else if (movement == ROBOT_ROTATE_LEFT) {
+			break;
+		case ROBOT_ROTATE_LEFT:
 			rightSideSpeed = 1 - MOTOR_SPEED_ROTATE;
 			leftSideSpeed = MOTOR_SPEED_ROTATE;
-		} else if (movement == ROBOT_ROTATE_RIGHT) {
+			break;
+		case ROBOT_ROTATE_RIGHT:
 			rightSideSpeed = MOTOR_SPEED_ROTATE;
 			leftSideSpeed = 1 - MOTOR_SPEED_ROTATE;
+			break;
+		case ROBOT_STOP:
+			rightSideSpeed = 1.0f;
+			leftSideSpeed = 1.0f;
+			break;
 		}
 	}
 }
