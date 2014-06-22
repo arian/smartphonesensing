@@ -12,7 +12,7 @@ import nl.tudelft.followbot.camera.CameraEstimator;
 import nl.tudelft.followbot.data.DataStack;
 import nl.tudelft.followbot.data.FeatureExtractor;
 import nl.tudelft.followbot.filters.particle.Filter;
-import nl.tudelft.followbot.ioio.IOIOLoop;
+import nl.tudelft.followbot.ioio.MotorController;
 import nl.tudelft.followbot.knn.FeatureVector;
 import nl.tudelft.followbot.knn.KNN;
 import nl.tudelft.followbot.knn.KNNClass;
@@ -138,10 +138,13 @@ public class MainActivity extends IOIOActivity {
 	 */
 	private Filter filter;
 
-	/* Creates a IOIO loop that interfaces with the IOIO board via Bluetooth */
+	/**
+	 * Creates a IOIO loop that interfaces with the IOIO board via Bluetooth and
+	 * controls the motor speeds
+	 */
 	@Override
-	protected IOIOLoop createIOIOLooper() {
-		return new IOIOLoop();
+	protected MotorController createIOIOLooper() {
+		return new MotorController();
 	}
 
 	/**
@@ -187,6 +190,7 @@ public class MainActivity extends IOIOActivity {
 
 		}
 	};
+
 	/**
 	 * OpenCV initialization
 	 */
