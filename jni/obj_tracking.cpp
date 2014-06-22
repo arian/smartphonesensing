@@ -151,7 +151,13 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 			distance_phone = c3[2];
 		}
 
-		distance_phone = -24.0 / 31.0 * distance_phone + 1995.0 / 31.0;
+		distance_phone = -0.0024 * pow(distance_phone, 3.0)
+						+ 0.36 * pow(distance_phone, 2.0)
+						- 18 * distance_phone
+						+ 340;
+
+		sprintf(text, "%f   %f", c1[2], distance_phone);
+		putText(mRgba, text, Point(20, 40), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
 
 		// Compute lengths of triangle sides
 		float a = sqrt((c2[0]-c3[0])*(c2[0]-c3[0]) + (c2[1]-c3[1])*(c2[1]-c3[1]));
