@@ -53,6 +53,26 @@ public class FilterTest {
 	}
 
 	@Test
+	public void testHeadingMeasurement() {
+		Filter filter = new Filter().withRandom(new RandomMock())
+				.withDistribution(new NormalDistributionMock()).fill(4, 5);
+
+		Particles ps = filter.getParticles();
+		ps.get(0).setXYO(0, 1, 0);
+		ps.get(1).setXYO(0, 2, 0);
+		ps.get(2).setXYO(0, -1, 0);
+		ps.get(3).setXYO(1, 0, 0);
+
+		filter.headingMeasurement(0, 0.5);
+
+		assertEquals(1, ps.get(0).getWeight(), 1e-6);
+		assertEquals(1, ps.get(1).getWeight(), 1e-6);
+		assertEquals(0, ps.get(2).getWeight(), 1e-6);
+		assertEquals(0, ps.get(3).getWeight(), 1e-6);
+
+	}
+
+	@Test
 	public void testUserMove() {
 		Filter filter = new Filter().withRandom(new RandomMock())
 				.withDistribution(new NormalDistributionMock());

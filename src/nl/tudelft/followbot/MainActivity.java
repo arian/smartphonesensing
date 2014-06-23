@@ -61,12 +61,12 @@ public class MainActivity extends IOIOActivity {
 	/**
 	 * std dev of the user orientation, which updates the particle filter
 	 */
-	private static final double USER_ROTATION_NOISE = 0.05; // radians
+	private static final double USER_ROTATION_NOISE = 0.01; // radians
 	/**
 	 * when the knn classifier detects walking, this is the assumed walking
 	 * speed
 	 */
-	private static final double USER_MOVE_SPEED = 0.4; // meters / second
+	private static final double USER_MOVE_SPEED = 0.3; // meters / second
 	/**
 	 * this is the standard deviation of the walking speed.
 	 */
@@ -78,7 +78,7 @@ public class MainActivity extends IOIOActivity {
 	/**
 	 * this is the standard deviation of the standing speed.
 	 */
-	private static final double USER_STAND_NOISE = 0.005;
+	private static final double USER_STAND_NOISE = 0.002;
 	/**
 	 * Number of particles in the filter
 	 */
@@ -99,6 +99,14 @@ public class MainActivity extends IOIOActivity {
 	 * Speed of the robot in [m/s]
 	 */
 	private static final float ROBOT_MOVE_NOISE = 0.02f;
+	/**
+	 * Speed of the robot turn in [rad/s]
+	 */
+	private static final float ROBOT_TURN_SPEED = 0.15f;
+	/**
+	 * Speed of the robot turn in [rad/s]
+	 */
+	private static final float ROBOT_TURN_NOISE = 0.0001f;
 	/**
 	 * Tag for Log.d debug logs
 	 */
@@ -406,10 +414,14 @@ public class MainActivity extends IOIOActivity {
 			double d = cameraEstimation.getDistance() / 100;
 			double a = cameraEstimation.getOrientation();
 
+			// add orientation noise, so orientation converges faster
+			filter.addDistanceNoise(d, 0.1);
 			// camera distance measurement with x [m] deviation
 			filter.distanceMeasurement(d, MEASURE_DISTANCE_NOISE);
 			filter.resample();
 
+			// add orientation noise, so orientation converges faster
+			filter.addOrientationNoise(a, 0.5);
 			// camera orientation measurement with x [rad] deviation
 			filter.orientationMeasurement(a, MEASURE_ORIENTATION_NOISE);
 			filter.resample();
@@ -422,52 +434,70 @@ public class MainActivity extends IOIOActivity {
 		double fd = filter.getDistanceEstimate();
 		double fa = filter.getOrientationEstimate();
 
-		if (true || MotorController.ioioConnected) {
+		if (MotorController.ioioConnected) {
+
 			((TextView) findViewById(R.id.ioio_status))
-					.setText("IOIO CONNECTED");
+					.setText("IOIO Connected");
 
-			if (false && (Math.abs(fa) > TOLERANCE_ORIENTATION_TRACKING)) {
-				// if the robot is pointing towards the right -> make it //
-				// turn left;
-				// otherwise -> make it turn right
-				if (fa > 0) {
-					// IOIO motor control (rotate robot)
-					MotorController
-							.robotMove(MotorController.ROBOT_ROTATE_LEFT);
+			if (fd > REFERENCE_DISTANCE + TOLERANCE_DISTANCE_TRACKING) {
 
-					// Same as with moving forward: we know how much it
-					// turns between samples -> we can update particles:
-					// 10 degrees per sample
+				if ((Math.abs(fa) > TOLERANCE_ORIENTATION_TRACKING)) {
+					// if the robot is pointing towards the right -> make it //
+					// turn left;
+					// otherwise -> make it turn right
+					if (fa > 0) {
+						// IOIO motor control (rotate robot)
+						MotorController
+								.robotMove(MotorController.ROBOT_ROTATE_LEFT);
+
+						// Same as with moving forward: we know how much it
+						// turns between samples -> we can update particles:
+						// -10 degrees per sample
+						filter.robotRotate(-ROBOT_TURN_SPEED, ROBOT_TURN_NOISE);
+
+						((TextView) findViewById(R.id.robot_action))
+								.setText("LEFT");
+
+					} else {
+						// IOIO motor control (rotate robot)
+						MotorController
+								.robotMove(MotorController.ROBOT_ROTATE_RIGHT);
+
+						// Same as with moving forward: we know how much it
+						// turns between samples -> we can update particles:
+						// 10 degrees per sample
+						filter.robotRotate(ROBOT_TURN_SPEED, ROBOT_TURN_NOISE);
+
+						((TextView) findViewById(R.id.robot_action))
+								.setText("RIGHT");
+					}
+
 				} else {
-					// IOIO motor control (rotate robot)
+
+					// IOIO motor control (make robot go forward)
 					MotorController
-							.robotMove(MotorController.ROBOT_ROTATE_RIGHT);
+							.robotMove(MotorController.ROBOT_MOVE_FORWARD);
 
-					// Same as with moving forward: we know how much it
-					// turns between samples -> we can update particles:
-					// -10 degrees per sample
+					// Knowing the traveled distance of the robot at each time
+					// instant, we can update the particles in the filter
+					// E.g.: if we sample every 100 ms -> robot moves 10 cm in
+					// that time
+					filter.robotMove(ROBOT_SPEED * millis / 1000.0,
+							ROBOT_MOVE_NOISE);
+
+					((TextView) findViewById(R.id.robot_action))
+							.setText("FORWARD");
+
 				}
-			} else if (fd > REFERENCE_DISTANCE + TOLERANCE_DISTANCE_TRACKING) {
-
-				// IOIO motor control (make robot go forward)
-				MotorController.robotMove(MotorController.ROBOT_MOVE_FORWARD);
-
-				// Knowing the traveled distance of the robot at each time
-				// instant, we can update the particles in the filter
-				// E.g.: if we sample every 100 ms -> robot moves 10 cm in
-				// that time
-				filter.robotMove(ROBOT_SPEED * millis / 1000.0,
-						ROBOT_MOVE_NOISE);
-
-				((TextView) findViewById(R.id.robot_action)).setText("FORWARD");
-
-				// filter.robotMove(ROBOT_SPEED * millis / 1000.0, 0.05);
 			} else {
 				MotorController.robotMove(MotorController.ROBOT_STOP);
+
 				((TextView) findViewById(R.id.robot_action)).setText("STOP");
-				((TextView) findViewById(R.id.ioio_status))
-						.setText("IOIO DISCONNECTED");
 			}
+		} else {
+			((TextView) findViewById(R.id.ioio_status))
+					.setText("IOIO DISCONNECTED");
 		}
 	}
+
 }

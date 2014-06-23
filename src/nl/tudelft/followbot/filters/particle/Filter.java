@@ -10,7 +10,9 @@ import javax.swing.JFrame;
 import nl.tudelft.followbot.math.IDistribution;
 import nl.tudelft.followbot.math.IRandom;
 import nl.tudelft.followbot.math.NormalDistribution;
+import nl.tudelft.followbot.math.NormalDistributionMock;
 import nl.tudelft.followbot.math.Random;
+import nl.tudelft.followbot.math.RandomMock;
 
 import org.math.plot.Plot3DPanel;
 
@@ -44,15 +46,10 @@ public class Filter {
 			double a = 2 * Math.PI * random.get(i, N);
 
 			// orientation is between [-pi; pi] degrees
-			// double orientation = Math.PI * (2 * random.get(i, N) - 1);
-			double orientation = 0;
+			double orientation = Math.PI * (2 * random.get(i, N) - 1);
 
-			double x = 0;
-			double y = -1.0;
-
-			// Particle p = new Particle(r * Math.cos(a), r * Math.sin(a),
-			// orientation);
-			Particle p = new Particle(x, y, orientation);
+			Particle p = new Particle(r * Math.cos(a), r * Math.sin(a),
+					orientation);
 
 			p.setWeight(1.0 / N);
 			particles.add(p);
@@ -238,6 +235,12 @@ public class Filter {
 	 */
 	public void robotMove(double d, double sigma) {
 		for (Particle p : particles) {
+			double o = p.getOrientation();
+
+			if (Math.abs(o) > Math.PI / 2) {
+				continue;
+			}
+
 			double dist = distribution.getQuantile(d, sigma, random.get());
 
 			double x = p.getX();
@@ -245,7 +248,6 @@ public class Filter {
 
 			// Angle pointing to the origin
 			double a = Math.atan2(y, x) + Math.PI;
-			double o = p.getOrientation();
 
 			// angle to move to relative in the coordinate system
 			double b = a + o;
@@ -305,6 +307,26 @@ public class Filter {
 		return (orientation / particles.size());
 	}
 
+	public void addDistanceNoise(double around, double percentage) {
+		int N = (int) (particles.size() * percentage);
+		for (int i = 0; i < N; i++) {
+			double a = distribution.getQuantile(Math.PI / 2, 0.1, random.get());
+			double d = distribution.getQuantile(around, 0.1, random.get());
+			double x = Math.cos(a) * d;
+			double y = Math.sin(a) * d;
+			particles.get(i).setX(x).setY(y);
+		}
+	}
+
+	public void addOrientationNoise(double around, double percentage) {
+		int N = (int) (particles.size() * percentage);
+		for (int i = 0; i < N; i++) {
+			double orientation = distribution.getQuantile(around, 0.1,
+					random.get());
+			particles.get(i).setOrientation(orientation);
+		}
+	}
+
 	/**
 	 * Convert all particle positions / weight to an array
 	 * 
@@ -360,30 +382,13 @@ public class Filter {
 	}
 
 	static public void main(String[] argv) {
-		Filter filter = new Filter().fill(100, 10);
+		Filter filter = new Filter().withRandom(new RandomMock())
+				.withDistribution(new NormalDistributionMock()).fill(10, 5);
 
-		// filter.plot("Initial");
+		filter.headingMeasurement(0, 0);
 
-		filter.userMove(0.0, 0.05);
-		filter.robotMove(0.5, 0.05);
-		System.out.println(filter.getDistanceEstimate());
-
-		filter.userMove(0.0, 0.05);
-		filter.robotMove(0.1, 0.05);
-		System.out.println(filter.getDistanceEstimate());
-
-		filter.userMove(0.0, 0.05);
-		filter.robotMove(0.5, 0.05);
-		System.out.println(filter.getDistanceEstimate());
-
-		filter.userMove(0.0, 0.05);
-		filter.robotMove(0.1, 0.05);
-		System.out.println(filter.getDistanceEstimate());
-
-		filter.userMove(0.10, 0.05);
-		System.out.println(filter.getDistanceEstimate());
-
-		filter.plot("move");
+		filter.plot("thing");
 
 	}
+
 }
