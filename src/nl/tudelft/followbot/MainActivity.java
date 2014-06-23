@@ -455,7 +455,7 @@ public class MainActivity extends IOIOActivity {
 
 				((TextView) findViewById(R.id.robot_action)).setText("FORWARD");
 
-				filter.robotMove(ROBOT_SPEED * millis / 1000.0, 0.05);
+				// filter.robotMove(ROBOT_SPEED * millis / 1000.0, 0.05);
 			} else {
 				MotorController.robotMove(MotorController.ROBOT_STOP);
 				((TextView) findViewById(R.id.robot_action)).setText("STOP");
