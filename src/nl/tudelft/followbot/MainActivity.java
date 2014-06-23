@@ -26,7 +26,6 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -345,12 +344,18 @@ public class MainActivity extends IOIOActivity {
 
 		activityMonitor.detectActivity(feature);
 
+		if (plotKNN) {
+			float[] f = activityMonitor.getNormalizedFeatureValues(feature);
+			plotView.plotPoint(f[0], f[1]);
+		} else {
+			plotView.hidePoint();
+		}
+
 		if (activityMonitor.isWalking() || activityMonitor.isStanding()) {
 			TextView tv = (TextView) findViewById(R.id.activity_output);
 			tv.setText(activityMonitor.getClassName());
 
 			if (millis > 0 && activityMonitor.isWalking()) {
-				Log.d(TAG, "" + (millis / 1000.0 * USER_MOVE_SPEED));
 				filter.userMove(millis / 1000.0 * USER_MOVE_SPEED,
 						USER_MOVE_NOISE);
 				return;

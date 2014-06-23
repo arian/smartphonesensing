@@ -130,6 +130,11 @@ public class ActivityMonitor {
 		return null;
 	}
 
+	public float[] getNormalizedFeatureValues(FeatureVector feature) {
+		float[] f = knn.normalizeFeature(feature);
+		return f;
+	}
+
 	public void clear() {
 		knn.clear();
 	}

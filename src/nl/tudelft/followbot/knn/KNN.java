@@ -9,8 +9,8 @@ public class KNN {
 
 	private final ArrayList<FeatureVector> features = new ArrayList<FeatureVector>();
 
-	private float[] min;
-	private float[] max;
+	protected float[] min;
+	protected float[] max;
 
 	/**
 	 * Add new learned data point
@@ -86,10 +86,14 @@ public class KNN {
 		return features;
 	}
 
+	public float[] normalizeFeature(FeatureVector feature) {
+		return feature.getNormalizedValues(min, max);
+	}
+
 	public float[][] getNormalizedFeatures() {
 		float[][] d = new float[features.size()][2];
 		for (int i = 0; i < features.size(); i++) {
-			d[i] = features.get(i).getNormalizedValues(min, max);
+			d[i] = normalizeFeature(features.get(i));
 		}
 		return d;
 	}

@@ -14,22 +14,33 @@ public class ScatterPlotView extends View {
 
 	private final ArrayList<ShapeDrawable> mDrawables = new ArrayList<ShapeDrawable>();
 	private final ShapeDrawable origin = new ShapeDrawable();
-	private String minMaxText = "(0,0)";
+	private ShapeDrawable point = new ShapeDrawable();
 
+	private String minMaxText = "(0,0)";
 	private final Paint textPaint;
+	private double[] pointXY;
 
 	public ScatterPlotView(Context context) {
 		super(context);
 		textPaint = new Paint();
 		textPaint.setColor(Color.BLUE);
+
+		point = new ShapeDrawable(new OvalShape());
+		point.getPaint().setColor(Color.RED);
 	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
 		origin.draw(canvas);
+
 		for (ShapeDrawable md : mDrawables) {
 			md.draw(canvas);
 		}
+
+		if (pointXY != null) {
+			point.draw(canvas);
+		}
+
 		canvas.drawText(minMaxText, canvas.getWidth() - 60,
 				canvas.getHeight() - 40, textPaint);
 	}
@@ -85,7 +96,22 @@ public class ScatterPlotView extends View {
 		origin.setBounds(width / 2 - 10, height / 2 - 10, width / 2 + 10,
 				height / 2 + 10);
 
+		if (pointXY != null && pointXY.length == 2) {
+			int _x = (int) ((pointXY[0] - min) / (max - min) * width);
+			int _y = (int) ((pointXY[1] - min) / (max - min) * height);
+			_y = height - _y; // minimum starts at the bottom of the screen
+			point.setBounds(_x - 10, _y - 10, _x + 10, _y + 10);
+		}
+
 		invalidate();
+	}
+
+	public void plotPoint(double x, double y) {
+		pointXY = new double[] { x, y };
+	}
+
+	public void hidePoint() {
+		pointXY = null;
 	}
 
 	static int blend(int color1, int color2, double frac) {
