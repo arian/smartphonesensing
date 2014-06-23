@@ -130,7 +130,7 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 		char text[255];
 
 		// Compute slope angle of the line between the two blue markers (robot orientation)
-		float alpha = atan2((c2[1] - c3[1]), (c2[0] - c3[0]));
+		float alpha = atan2(((c2[1] + c3[1])/2 - c1[1]), ((c2[0] + c3[0])/2 - c1[0])) + CV_PI / 2;
 
 		// Compute triangle centroid position
 		int centroid_X = c1[0] + ((c2[0] + c3[0]) / 2 - c1[0]) * (2/3);
