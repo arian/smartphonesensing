@@ -26,6 +26,7 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -70,7 +71,7 @@ public class MainActivity extends IOIOActivity {
 	/**
 	 * this is the standard deviation of the walking speed.
 	 */
-	private static final double USER_MOVE_NOISE = 0.1;
+	private static final double USER_MOVE_NOISE = 0.05;
 	/**
 	 * this is the standard deviation of the standing speed.
 	 */
@@ -95,7 +96,10 @@ public class MainActivity extends IOIOActivity {
 	 * Speed of the robot in [m/s]
 	 */
 	private static final float ROBOT_SPEED = 0.27f;
-
+	/**
+	 * Speed of the robot in [m/s]
+	 */
+	private static final float ROBOT_MOVE_NOISE = 0.02f;
 	/**
 	 * Tag for Log.d debug logs
 	 */
@@ -268,22 +272,6 @@ public class MainActivity extends IOIOActivity {
 			orienCalc.resume();
 		}
 
-		// // simulate heading measurement
-		// new Periodical() {
-		// @Override
-		// public void run(long millis) {
-		// // filter.distanceMeasurement(1.2, MEASURE_DISTANCE_NOISE);
-		// // filter.resample();
-		//
-		// // filter.orientationMeasurement(Math.PI * 2 / 3,
-		// // MEASURE_ORIENTATION_NOISE);
-		// // filter.resample();
-		//
-		// filter.headingMeasurement(0, MEASURE_HEADING_NOISE);
-		// // filter.resample();
-		// }
-		// }.delay(4000);
-
 	}
 
 	@Override
@@ -350,7 +338,7 @@ public class MainActivity extends IOIOActivity {
 
 	public void senseUserActivity(long millis) {
 		detectActivity(millis);
-		senseUserRotate();
+		// senseUserRotate();
 	}
 
 	/**
@@ -370,14 +358,16 @@ public class MainActivity extends IOIOActivity {
 			tv.setText(activityMonitor.getClassName());
 
 			if (millis > 0 && activityMonitor.isWalking()) {
-				filter.userMove(millis / 1000 * USER_MOVE_SPEED,
+				Log.d(TAG, "" + (millis / 1000.0 * USER_MOVE_SPEED));
+				filter.userMove(millis / 1000.0 * USER_MOVE_SPEED,
 						USER_MOVE_NOISE);
 				return;
 			}
 		}
 
 		if (millis > 0) {
-			filter.userMove(millis / 1000 * USER_STAND_SPEED, USER_STAND_NOISE);
+			filter.userMove(millis / 1000.0 * USER_STAND_SPEED,
+					USER_STAND_NOISE);
 		}
 	}
 
@@ -437,7 +427,7 @@ public class MainActivity extends IOIOActivity {
 		double fd = filter.getDistanceEstimate();
 		double fa = filter.getOrientationEstimate();
 
-		if (MotorController.ioioConnected) {
+		if (true || MotorController.ioioConnected) {
 
 			if (false && (Math.abs(fa) > TOLERANCE_ORIENTATION_TRACKING)) {
 				// if the robot is pointing towards the right -> make it //
@@ -463,16 +453,23 @@ public class MainActivity extends IOIOActivity {
 					// orientationPF.robotRotate(-10, 2); } }
 				}
 			} else if (fd > REFERENCE_DISTANCE + TOLERANCE_DISTANCE_TRACKING) {
+
 				// IOIO motor control (make robot go forward)
 				MotorController.robotMove(MotorController.ROBOT_MOVE_FORWARD);
-				filter.robotMove(ROBOT_SPEED * millis / 1000, 0.05);
+
 				// Knowing the traveled distance of the robot at each time
 				// instant, we can update the particles in the filter
 				// E.g.: if we sample every 100 ms -> robot moves 10 cm in
 				// that time
-				// filter.robotMove(10, 2);
+
+				filter.robotMove(ROBOT_SPEED * millis / 1000.0,
+						ROBOT_MOVE_NOISE);
+
+				((TextView) findViewById(R.id.robot_action)).setText("FORWARD");
+
 			} else {
 				MotorController.robotMove(MotorController.ROBOT_STOP);
+				((TextView) findViewById(R.id.robot_action)).setText("STOP");
 			}
 		}
 

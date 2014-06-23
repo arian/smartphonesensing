@@ -20,15 +20,49 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/robot_estimation"
+        <TableLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content" >
 
-        <TextView
-            android:id="@+id/activity_output"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            <TableRow
+                android:id="@+id/tableRow1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dip">
+
+                <TextView
+                    android:id="@+id/robot_estimation"
+                    android:layout_width="match_parent"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/activity_output"
+                    android:layout_width="match_parent"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content" />
+
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/tableRow2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dip">
+
+                <TextView
+                    android:id="@+id/robot_action"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/other"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </TableRow>
+
+        </TableLayout>
+
 
         <LinearLayout
             android:id="@+id/chart"

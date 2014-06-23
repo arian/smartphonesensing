@@ -48,7 +48,7 @@ public class Filter {
 			double orientation = 0;
 
 			double x = 0;
-			double y = -10.0;
+			double y = -1.0;
 
 			// Particle p = new Particle(r * Math.cos(a), r * Math.sin(a),
 			// orientation);
@@ -332,6 +332,7 @@ public class Filter {
 		double[][] x = getPositions();
 
 		Plot3DPanel plot = new Plot3DPanel();
+
 		plot.addScatterPlot("particles", x);
 
 		JFrame frame = new JFrame();
@@ -361,131 +362,28 @@ public class Filter {
 	static public void main(String[] argv) {
 		Filter filter = new Filter().fill(100, 10);
 
-		String folder = "/home/arian/dev/android/FollowBot/report/images";
+		// filter.plot("Initial");
 
-		// filter.plot("Initialization");
-		filter.saveToFile(new File(folder, "moveInitialization.csv"));
-		//
-		filter.userMove(30, 0.5);
-		filter.saveToFile(new File(folder, "userMove.csv"));
-		//
-		filter.userRotate(Math.PI / 2, 0.2);
-		filter.saveToFile(new File(folder, "userRotate.csv"));
+		filter.userMove(0.0, 0.05);
+		filter.robotMove(0.5, 0.05);
+		System.out.println(filter.getDistanceEstimate());
 
-		// filter.distanceMeasurement(5, 1);
-		// filter.saveToFile(new File(folder, "measureDistance.csv"));
-		// filter.resample();
-		// filter.plot("Initial measurement");
-		//
-		// filter.newResample();
-		//
-		// filter.headingMeasurement(0, 0.3);
-		// filter.saveToFile(new File(folder, "measureHeading.csv"));
+		filter.userMove(0.0, 0.05);
+		filter.robotMove(0.1, 0.05);
+		System.out.println(filter.getDistanceEstimate());
 
-		// filter.plot("Heading measurement");
-		/*
-		 * filter.resample(); filter.plot("after resampling 2");
-		 * 
-		 * filter.orientationMeasurement(0, 10);
-		 * filter.plot("Orientation Measurement");
-		 * 
-		 * filter.resample(); filter.plot("after resampling 3");
-		 * 
-		 * filter.robotMove(30, 5);
-		 * 
-		 * Particles prior = filter.getParticles();
-		 * 
-		 * // filter.distanceMeasurement(175, 30); filter.plot("move");
-		 */
-		// filter.resample();
-		// filter.plot("after resampling 4");
+		filter.userMove(0.0, 0.05);
+		filter.robotMove(0.5, 0.05);
+		System.out.println(filter.getDistanceEstimate());
 
-		// filter.orientationMeasurement(0, 10);
-		// filter.plot("Orientation Measurement");
+		filter.userMove(0.0, 0.05);
+		filter.robotMove(0.1, 0.05);
+		System.out.println(filter.getDistanceEstimate());
 
-		// filter.multiplyPrior(prior);
-		// filter.plot("after multiplying with prior");
-		/*
-		 * filter.multiplyPrior(prior2);
-		 * filter.plot("after multiplying with prior 2");
-		 * 
-		 * prior2 = filter.getParticles();
-		 * 
-		 * filter.resample(); filter.plot("after resampling 4");
-		 * 
-		 * // another test
-		 * 
-		 * filter.robotRotate(10, 5);
-		 * 
-		 * filter.distanceMeasurement(175, 30);
-		 * filter.plot("new distance measurement");
-		 * 
-		 * filter.multiplyPrior(prior1);
-		 * filter.plot("after multiplying with prior");
-		 * 
-		 * filter.resample(); filter.plot("after resampling 3");
-		 * 
-		 * filter.orientationMeasurement(8, 10);
-		 * filter.plot("Orientation Measurement");
-		 * 
-		 * filter.multiplyPrior(prior2);
-		 * filter.plot("after multiplying with prior 2");
-		 * 
-		 * filter.resample(); filter.plot("after resampling 4");
-		 * 
-		 * System.out.println("Distance: " + filter.getDistanceEstimate() +
-		 * " Orientation: " + filter.getOrientationEstimate());
-		 * 
-		 * /* filter.orientationMeasurement(Math.PI / 3.0, 2.0);
-		 * filter.plot("Orientation Measurement");
-		 * 
-		 * 
-		 * 
-		 * filter.robotMove(0.5, 0.2); filter.distanceMeasurement(19.5, 4.0);
-		 * filter.plot("new distance measurement");
-		 * 
-		 * filter.multiplyPrior(prior);
-		 * filter.plot("after multiplying with prior");
-		 * 
-		 * filter.resample(); filter.plot("after resampling 3");
-		 * 
-		 * filter.orientationMeasurement(Math.PI / 3.0, 2.0);
-		 * filter.plot("new orientation measurement");
-		 * 
-		 * filter.resample(); filter.plot("after resampling 4");
-		 * 
-		 * /* bla
-		 */
-		/*
-		 * filter.robotRotate(Math.PI / 3.0, 0.2);
-		 * filter.distanceMeasurement(19.5, 4.0);
-		 * filter.plot("new distance measurement 2");
-		 * 
-		 * filter.multiplyPrior(prior);
-		 * filter.plot("after multiplying with prior2");
-		 * 
-		 * filter.resample(); filter.plot("after resampling 5");
-		 * 
-		 * filter.orientationMeasurement(0, 0.2);
-		 * filter.plot("new orientation measurement2");
-		 * 
-		 * filter.resample(); filter.plot("after resampling 6");
-		 * 
-		 * /* filter.move(-5, 0, 2); filter.plot("after moving");
-		 * 
-		 * filter.distanceMeasurement(0.5, 1);
-		 * filter.plot("new distance measurement");
-		 * 
-		 * filter.multiplyPrior(prior);
-		 * filter.plot("after multiplying with prior");
-		 * 
-		 * Particles prior2 = filter.getParticles(); filter.resample();
-		 * filter.plot("second resampling");
-		 * 
-		 * filter.move(-1, 0, 2); filter.plot("after second moving");
-		 * 
-		 * filter.distanceMeasurement(2, 1);
-		 * filter.plot("new distance measurement");
-		 */
+		filter.userMove(0.10, 0.05);
+		System.out.println(filter.getDistanceEstimate());
+
+		filter.plot("move");
+
 	}
 }

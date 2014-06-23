@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.view.View;
@@ -12,16 +13,25 @@ import android.view.View;
 public class ScatterPlotView extends View {
 
 	private final ArrayList<ShapeDrawable> mDrawables = new ArrayList<ShapeDrawable>();
+	private final ShapeDrawable origin = new ShapeDrawable();
+	private String minMaxText = "(0,0)";
+
+	private final Paint textPaint;
 
 	public ScatterPlotView(Context context) {
 		super(context);
+		textPaint = new Paint();
+		textPaint.setColor(Color.BLUE);
 	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
+		origin.draw(canvas);
 		for (ShapeDrawable md : mDrawables) {
 			md.draw(canvas);
 		}
+		canvas.drawText(minMaxText, canvas.getWidth() - 60,
+				canvas.getHeight() - 40, textPaint);
 	}
 
 	private void createShapes(int length) {
@@ -63,10 +73,17 @@ public class ScatterPlotView extends View {
 		for (ShapeDrawable md : mDrawables) {
 			int _x = (int) ((x[i] - min) / (max - min) * width);
 			int _y = (int) ((y[i] - min) / (max - min) * height);
+			_y = height - _y; // minimum starts at the bottom of the screen
 			md.setBounds(_x - 5, _y - 5, _x + 5, _y + 5);
 			md.getPaint().setColor(blend(0xff74AC23, Color.MAGENTA, w[i]));
 			i++;
 		}
+
+		minMaxText = String.format("(%2.2f, %2.2f)", min, max);
+
+		origin.getPaint().setColor(Color.BLACK);
+		origin.setBounds(width / 2 - 10, height / 2 - 10, width / 2 + 10,
+				height / 2 + 10);
 
 		invalidate();
 	}
