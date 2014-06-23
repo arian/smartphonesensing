@@ -56,7 +56,7 @@
                     android:layout_height="wrap_content" />
 
                 <TextView
-                    android:id="@+id/other"
+                    android:id="@+id/ioio_status"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
             </TableRow>

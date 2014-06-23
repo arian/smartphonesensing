@@ -271,7 +271,6 @@ public class MainActivity extends IOIOActivity {
 		if (orienCalc != null) {
 			orienCalc.resume();
 		}
-
 	}
 
 	@Override
@@ -419,6 +418,8 @@ public class MainActivity extends IOIOActivity {
 		double fa = filter.getOrientationEstimate();
 
 		if (true || MotorController.ioioConnected) {
+			((TextView) findViewById(R.id.ioio_status))
+					.setText("IOIO CONNECTED");
 
 			if (false && (Math.abs(fa) > TOLERANCE_ORIENTATION_TRACKING)) {
 				// if the robot is pointing towards the right -> make it //
@@ -459,6 +460,8 @@ public class MainActivity extends IOIOActivity {
 			} else {
 				MotorController.robotMove(MotorController.ROBOT_STOP);
 				((TextView) findViewById(R.id.robot_action)).setText("STOP");
+				((TextView) findViewById(R.id.ioio_status))
+						.setText("IOIO DISCONNECTED");
 			}
 		}
 	}
