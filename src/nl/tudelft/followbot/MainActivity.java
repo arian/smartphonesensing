@@ -337,17 +337,10 @@ public class MainActivity extends IOIOActivity {
 	}
 
 	public void senseUserActivity(long millis) {
-		detectActivity(millis);
-		// senseUserRotate();
-	}
-
-	/**
-	 * Use the KNN Classifier to detect the activity (walking/standing) and
-	 * update the particle filter accordingly
-	 * 
-	 * @param millis
-	 */
-	public void detectActivity(long millis) {
+		/*
+		 * Use the KNN Classifier to detect the activity (walking/standing) and
+		 * update the particle filter accordingly
+		 */
 		FeatureVector feature = new FeatureVector(null,
 				FeatureExtractor.extractFeaturesFromFloat4(accelStack));
 
@@ -369,6 +362,16 @@ public class MainActivity extends IOIOActivity {
 			filter.userMove(millis / 1000.0 * USER_STAND_SPEED,
 					USER_STAND_NOISE);
 		}
+
+		/*
+		 * Sense user rotate and apply it to particles only if user standing
+		 */
+		if (pYaw != Double.MIN_VALUE && activityMonitor.isStanding()) {
+			double diff = pYaw - yaw;
+			// applies to particle filter
+			filter.userRotate(diff, USER_ROTATION_NOISE);
+		}
+		pYaw = yaw;
 	}
 
 	public void startStop(View view) {
@@ -382,18 +385,6 @@ public class MainActivity extends IOIOActivity {
 			plotPeriodical.start(100);
 			started = true;
 		}
-	}
-
-	/**
-	 * Update particle filter for user rotations
-	 */
-	public void senseUserRotate() {
-		if (pYaw != Double.MIN_VALUE) {
-			double diff = pYaw - yaw;
-			// applies to particle filter
-			filter.userRotate(diff, USER_ROTATION_NOISE);
-		}
-		pYaw = yaw;
 	}
 
 	/**
@@ -441,7 +432,6 @@ public class MainActivity extends IOIOActivity {
 					// Same as with moving forward: we know how much it
 					// turns between samples -> we can update particles:
 					// 10 degrees per sample
-					// orientationPF.robotRotate(10, 2);
 				} else {
 					// IOIO motor control (rotate robot)
 					MotorController
@@ -450,7 +440,6 @@ public class MainActivity extends IOIOActivity {
 					// Same as with moving forward: we know how much it
 					// turns between samples -> we can update particles:
 					// -10 degrees per sample
-					// orientationPF.robotRotate(-10, 2); } }
 				}
 			} else if (fd > REFERENCE_DISTANCE + TOLERANCE_DISTANCE_TRACKING) {
 
@@ -461,17 +450,16 @@ public class MainActivity extends IOIOActivity {
 				// instant, we can update the particles in the filter
 				// E.g.: if we sample every 100 ms -> robot moves 10 cm in
 				// that time
-
 				filter.robotMove(ROBOT_SPEED * millis / 1000.0,
 						ROBOT_MOVE_NOISE);
 
 				((TextView) findViewById(R.id.robot_action)).setText("FORWARD");
 
+				filter.robotMove(ROBOT_SPEED * millis / 1000.0, 0.05);
 			} else {
 				MotorController.robotMove(MotorController.ROBOT_STOP);
 				((TextView) findViewById(R.id.robot_action)).setText("STOP");
 			}
 		}
-
 	}
 }
