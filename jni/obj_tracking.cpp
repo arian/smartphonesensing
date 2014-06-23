@@ -162,26 +162,28 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 		float c = sqrt((c1[0]-c2[0])*(c1[0]-c2[0]) + (c1[1]-c2[1])*(c1[1]-c2[1]));
 
 		// Compute triangle angles
-		float au = acosf(((b*b + c*c - a*a) / (2*b*c))) * (180 / CV_PI);
-		float bu = acosf(((a*a + c*c - b*b) / (2*a*c))) * (180 / CV_PI);
-		float cu = acosf(((b*b + a*a - c*c) / (2*b*a))) * (180 / CV_PI);
+		float au = acosf(((b*b + c*c - a*a) / (2*b*c)));
+		float bu = acosf(((a*a + c*c - b*b) / (2*a*c)));
+		float cu = acosf(((b*b + a*a - c*c) / (2*b*a)));
 
-		float beta = 30;
+		float beta;
 		// Find the largest angle and use it in the linear formula for computing the skew:
 		// beta = -0.75*max_angle + 0.75*180
 		// This gives a decent estimate without the need to calibrate the camera or take pictures of the robot
-		/*if ((au >= bu) && (au >= cu)) {
-			beta = (-au + 180.0) * 0.75;
+		if ((au >= bu) && (au >= cu)) {
+			beta = au;
 		}
 		else if ((bu >= au) && (bu >= cu)) {
-			beta = (-bu + 180.0) * 0.75;
+			beta = bu;
 		}
 		else if ((cu >= au) && (cu >= bu)) {
-			beta = (-cu + 180.0) * 0.75;
-		}*/
+			beta = cu;
+		}
+		
+		beta = -0.52*pow(beta, 3.0) + 3.3*pow(beta, 2.0) - 7.4*beta + 6.2;
 
 		// Compute user-robot distance
-		float distance_user = distance_phone * cos(beta * CV_PI / 180);
+		float distance_user = distance_phone * cos(beta);
 
 		sprintf(text, "%f   %f   %f", distance_user, distance_phone, alpha);
 		putText(mRgba, text, Point(20, 40), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0, 255));
