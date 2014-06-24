@@ -37,11 +37,11 @@ public class MainActivity extends IOIOActivity {
 	/**
 	 * Reference distance in [m] for the robot to track
 	 */
-	private static final double REFERENCE_DISTANCE = 0.5;
+	private static final double REFERENCE_DISTANCE = 0.4;
 	/**
 	 * Tolerance for robot reference tracking
 	 */
-	private static final double TOLERANCE_DISTANCE_TRACKING = 0.3;
+	private static final double TOLERANCE_DISTANCE_TRACKING = 0.2;
 	/**
 	 * Tolerance for robot orientation angle tracking
 	 */
