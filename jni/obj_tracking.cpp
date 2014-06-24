@@ -193,12 +193,8 @@ JNIEXPORT void JNICALL Java_nl_tudelft_followbot_camera_CameraEstimator_CircleOb
 		// Set robot detected flag
 		robot_detected = 1;
 
-		// circle positions and radii
 		SetDoubleField(env, thiz, thisClass, "distance", (double) distance_user);
-		
-		if (abs(alpha) <= CV_PI / 2) {
-			SetDoubleField(env, thiz, thisClass, "orientation", (double) alpha);
-		}
+		SetDoubleField(env, thiz, thisClass, "orientation", (double) alpha);
 
 		// circle positions and radii
 		SetFloatField(env, thiz, thisClass, "x1", c1[0]);

@@ -94,7 +94,7 @@ public class MainActivity extends IOIOActivity {
 	/**
 	 * Speed of the robot in [m/s]
 	 */
-	private static final float ROBOT_SPEED = 0.27f;
+	private static final float ROBOT_SPEED = 2.0f / 5.6f;
 	/**
 	 * Speed of the robot in [m/s]
 	 */
@@ -102,7 +102,7 @@ public class MainActivity extends IOIOActivity {
 	/**
 	 * Speed of the robot turn in [rad/s]
 	 */
-	private static final float ROBOT_TURN_SPEED = 0.15f;
+	private static final float ROBOT_TURN_SPEED = (float) (2.0 * Math.PI / 5.0);
 	/**
 	 * Speed of the robot turn in [rad/s]
 	 */
@@ -445,7 +445,7 @@ public class MainActivity extends IOIOActivity {
 					// if the robot is pointing towards the right -> make it //
 					// turn left;
 					// otherwise -> make it turn right
-					if (fa > 0) {
+					if (true || fa > 0) {
 						// IOIO motor control (rotate robot)
 						MotorController
 								.robotMove(MotorController.ROBOT_ROTATE_LEFT);

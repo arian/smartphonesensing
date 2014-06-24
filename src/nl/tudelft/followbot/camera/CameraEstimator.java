@@ -20,11 +20,11 @@ public class CameraEstimator implements CvCameraViewListener2 {
 	private static final int THRESH_GREEN_SMAX = 255;
 	private static final int THRESH_GREEN_VMAX = 255;
 
-	private static final int THRESH_BLUE_HMIN = 0;
+	private static final int THRESH_BLUE_HMIN = 7;
 	private static final int THRESH_BLUE_SMIN = 50;
 	private static final int THRESH_BLUE_VMIN = 50;
 
-	private static final int THRESH_BLUE_HMAX = 25;
+	private static final int THRESH_BLUE_HMAX = 20;
 	private static final int THRESH_BLUE_SMAX = 255;
 	private static final int THRESH_BLUE_VMAX = 255;
 
