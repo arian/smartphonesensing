@@ -45,7 +45,7 @@ public class MainActivity extends IOIOActivity {
 	/**
 	 * Tolerance for robot orientation angle tracking
 	 */
-	private static final double TOLERANCE_ORIENTATION_TRACKING = 0.1;
+	private static final double TOLERANCE_ORIENTATION_TRACKING = 0.2;
 	/**
 	 * Standard deviation of a camera distance measurement
 	 */
@@ -102,7 +102,8 @@ public class MainActivity extends IOIOActivity {
 	/**
 	 * Speed of the robot turn in [rad/s]
 	 */
-	private static final float ROBOT_TURN_SPEED = (float) (2.0 * Math.PI / 5.0);
+	private static final float ROBOT_TURN_RIGHT_SPEED = (float) (2.0 * Math.PI / 6.0);
+	private static final float ROBOT_TURN_LEFT_SPEED = (float) (2.0 * Math.PI / 5.0);
 	/**
 	 * Speed of the robot turn in [rad/s]
 	 */
@@ -421,7 +422,7 @@ public class MainActivity extends IOIOActivity {
 			filter.resample();
 
 			// add orientation noise, so orientation converges faster
-			filter.addOrientationNoise(a, 0.5);
+			filter.addOrientationNoise(a, 0.3);
 			// camera orientation measurement with x [rad] deviation
 			filter.orientationMeasurement(a, MEASURE_ORIENTATION_NOISE);
 			filter.resample();
@@ -445,7 +446,7 @@ public class MainActivity extends IOIOActivity {
 					// if the robot is pointing towards the right -> make it //
 					// turn left;
 					// otherwise -> make it turn right
-					if (true || fa > 0) {
+					if (fa > 0) {
 						// IOIO motor control (rotate robot)
 						MotorController
 								.robotMove(MotorController.ROBOT_ROTATE_LEFT);
@@ -453,7 +454,8 @@ public class MainActivity extends IOIOActivity {
 						// Same as with moving forward: we know how much it
 						// turns between samples -> we can update particles:
 						// -10 degrees per sample
-						filter.robotRotate(-ROBOT_TURN_SPEED, ROBOT_TURN_NOISE);
+						filter.robotRotate(-ROBOT_TURN_LEFT_SPEED * millis
+								/ 1000.0, ROBOT_TURN_NOISE);
 
 						((TextView) findViewById(R.id.robot_action))
 								.setText("LEFT");
@@ -466,7 +468,8 @@ public class MainActivity extends IOIOActivity {
 						// Same as with moving forward: we know how much it
 						// turns between samples -> we can update particles:
 						// 10 degrees per sample
-						filter.robotRotate(ROBOT_TURN_SPEED, ROBOT_TURN_NOISE);
+						filter.robotRotate(ROBOT_TURN_RIGHT_SPEED * millis
+								/ 1000.0, ROBOT_TURN_NOISE);
 
 						((TextView) findViewById(R.id.robot_action))
 								.setText("RIGHT");
